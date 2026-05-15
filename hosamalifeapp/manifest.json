@@ -1,0 +1,22 @@
+{
+  "name": "حسام ليف · Hossam Life",
+  "short_name": "حسام ليف",
+  "description": "Daily personal dashboard — devotions, habits, finance, photography, life.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFF5F8",
+  "theme_color": "#007AFF",
+  "orientation": "portrait",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "productivity", "health"]
+}
