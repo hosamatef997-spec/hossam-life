@@ -813,6 +813,15 @@ body::before {
   .glass.p-6 { padding: 14px !important; }
   .glass.p-4 { padding: 12px !important; }
 
+  /* v2.7.1 — Reduce gaps in 3-column layout and sidebars on mobile */
+  .layout-3col { gap: 10px !important; margin-top: 12px !important; }
+  .sidebar-col { gap: 10px !important; }
+  .grid-widgets { gap: 10px !important; }
+  .app-container { padding: 10px 10px !important; }
+
+  /* Reduce inline animation delays that make first 2 appear "smaller" while later widgets render larger */
+  .widget-wrap .glass { animation-delay: 0ms !important; }
+
   /* Hero card: more compact spacing */
   .hero-clock-big { font-size: 28px !important; letter-spacing: -0.5px !important; }
 
@@ -1008,12 +1017,12 @@ body::before {
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up { animation: fadeUp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
 
-/* v2.7 — Floating Refresh button */
+/* v2.7 — Floating Refresh button (top-RIGHT, opposite of sync pill which is top-left) */
 .refresh-btn {
   position: fixed;
-  top: 14px;
-  inset-inline-end: 96px; /* next to sync pill */
-  z-index: 50;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: 16px;
+  z-index: 80;
   width: 36px; height: 36px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.85);
@@ -1048,11 +1057,11 @@ body::before {
 }
 @media (max-width: 640px) {
   .refresh-btn {
-    top: 10px;
-    inset-inline-end: 82px;
-    width: 32px; height: 32px;
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    right: 12px;
+    width: 34px; height: 34px;
   }
-  .refresh-btn svg { width: 16px; height: 16px; }
+  .refresh-btn svg { width: 17px; height: 17px; }
 }
 </style>
 </head>
@@ -3244,7 +3253,7 @@ body::before {
 
         <div class="glass-strong p-4 rounded-2xl">
           <p class="t-caption2 mb-2">عن · ABOUT</p>
-          <p class="t-footnote">حسام ليف · إصدار 2.7 — Refresh button</p>
+          <p class="t-footnote">حسام ليف · إصدار 2.7.1 — Layout fixes</p>
           <p class="t-caption1 font-en mt-1">Built with care for Hossam</p>
         </div>
       </div>
@@ -4361,6 +4370,15 @@ function app() {
     toggleWidgetVisible(key) {
       if (!this.widgets[key]) return;
       this.widgets[key].visible = !this.widgets[key].visible;
+      // v2.7.1 — Track explicit user-enables for Phase 3 widgets
+      const phase3 = ['heatmap', 'goals', 'netWorth', 'voiceMemos', 'hijriZakat'];
+      if (phase3.includes(key)) {
+        if (this.widgets[key].visible) {
+          localStorage.setItem('hl_show_' + key, '1');
+        } else {
+          localStorage.removeItem('hl_show_' + key);
+        }
+      }
       this.saveState();
     },
     widgetClass(key) { return 'w-size-' + ((this.widgets[key] && this.widgets[key].size) || 'm'); },
@@ -6145,15 +6163,17 @@ function app() {
         if (s.fridayChecks) this.fridayChecks = s.fridayChecks;
         if (s.dailyHistory) this.dailyHistory = s.dailyHistory;
         if (s.widgets) Object.keys(s.widgets).forEach(k => { if (this.widgets[k]) Object.assign(this.widgets[k], s.widgets[k]); });
-        // v2.6.1 — Migration: hide new Phase 3 widgets that were auto-enabled in v2.6 (user can re-enable)
+        // v2.7.1 — Robust migration: hide Phase 3 widgets unless user explicitly enabled them
+        // Runs on EVERY load (handles fresh sign-in pulling old Firestore state)
         try {
-          const migrated = localStorage.getItem('hl_v26_migrated');
-          if (!migrated) {
-            ['heatmap', 'goals', 'netWorth', 'voiceMemos', 'hijriZakat'].forEach(k => {
-              if (this.widgets[k]) this.widgets[k].visible = false;
-            });
-            localStorage.setItem('hl_v26_migrated', '1');
-          }
+          ['heatmap', 'goals', 'netWorth', 'voiceMemos', 'hijriZakat'].forEach(k => {
+            if (this.widgets[k]) {
+              const explicit = localStorage.getItem('hl_show_' + k);
+              if (!explicit) {
+                this.widgets[k].visible = false;
+              }
+            }
+          });
         } catch (e) {}
         if (s.recurringExpenses) this.recurringExpenses = s.recurringExpenses;
         if (s.profile) Object.assign(this.profile, s.profile);
