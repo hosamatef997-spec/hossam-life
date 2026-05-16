@@ -338,8 +338,7 @@ body::before {
 .app-container {
   max-width: 1600px;
   margin: 0 auto;
-  padding: 24px 16px;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 24px);
+  padding: 16px 16px;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
 }
 @media (min-width: 768px) {
@@ -821,7 +820,6 @@ body::before {
   .grid-widgets { gap: 10px !important; }
   .app-container {
     padding: 10px 10px !important;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 60px) !important;
   }
 
@@ -1054,38 +1052,84 @@ body::before {
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up { animation: fadeUp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
 
-/* v2.9 — Hamburger menu button (replaces refresh button position) */
-.hamburger-btn {
-  position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 14px);
-  right: 16px;
-  z-index: 90;
-  width: 40px; height: 40px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.92);
+/* v3.0 — Proper sticky header bar (replaces all floating buttons) */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 245, 248, 0.85);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border: 0.5px solid rgba(60, 60, 67, 0.18);
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.app-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+.header-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(176, 143, 58, 0.4);
+  background: linear-gradient(135deg, #2A1F12, #4a3520);
+  color: #EEE7D9;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: -apple-system, sans-serif;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.header-avatar:active { transform: scale(0.95); }
+.header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.header-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2A1F12;
+}
+.header-menu {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(120, 120, 128, 0.08);
+  border: none;
   color: var(--ink);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.15s;
 }
-.hamburger-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+.header-menu:hover { background: rgba(120, 120, 128, 0.16); }
+.header-menu:active { transform: scale(0.95); }
+.header-banner {
+  padding: 6px 14px;
+  background: rgba(255, 149, 0, 0.12);
+  color: var(--sf-orange);
+  font-size: 12px;
+  text-align: center;
+  font-weight: 600;
+  border-top: 0.5px solid rgba(255, 149, 0, 0.25);
 }
-.hamburger-btn:active { transform: scale(0.95); }
 @media (max-width: 640px) {
-  .hamburger-btn {
-    top: calc(env(safe-area-inset-top, 0px) + 10px);
-    right: 12px;
-    width: 38px; height: 38px;
-  }
+  .app-header-inner { padding: 8px 12px; gap: 10px; }
+  .header-avatar, .header-menu { width: 36px; height: 36px; }
 }
+/* Hide old sync-pill completely */
+.sync-pill { display: none !important; }
 
 /* v2.9 — Side Drawer (slides from right in RTL = visual right) */
 .drawer-backdrop {
@@ -1222,23 +1266,49 @@ body::before {
 
 <body x-data="app()" x-init="init()" x-cloak :class="{ 'edit-mode': ui.editMode }">
 
-<!-- v2.9 — Sync pill only shows briefly on error or while syncing, hidden when synced (less clutter) -->
-<div class="sync-pill" :class="sync.status" @click="ui.showDrawer = true" :title="sync.error || ''"
-     x-show="sync.status === 'error' || sync.status === 'offline' || sync.status === 'signed-out'">
-  <span class="dot"></span>
-  <span x-show="sync.status === 'error'">خطأ</span>
-  <span x-show="sync.status === 'offline'">بدون اتصال</span>
-  <span x-show="sync.status === 'signed-out'">سجل دخول</span>
-</div>
+<!-- v3.0 — PROPER STICKY HEADER (no more floating buttons over content) -->
+<header class="app-header" x-show="!lock.active">
+  <div class="app-header-inner">
+    <!-- LEFT: Profile avatar (opens drawer) -->
+    <button class="header-avatar" @click="ui.showDrawer = true" aria-label="Profile menu">
+      <template x-if="profile.avatar">
+        <img :src="profile.avatar" alt="">
+      </template>
+      <template x-if="!profile.avatar">
+        <span x-text="profile.initial || (profile.nameEn || 'H').charAt(0).toUpperCase()"></span>
+      </template>
+    </button>
 
-<!-- v2.9 — Hamburger menu button (top-right, opens side drawer) -->
-<button class="hamburger-btn" @click="ui.showDrawer = true" title="القائمة · Menu" aria-label="Menu">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="3" y1="6" x2="21" y2="6"/>
-    <line x1="3" y1="12" x2="21" y2="12"/>
-    <line x1="3" y1="18" x2="21" y2="18"/>
-  </svg>
-</button>
+    <!-- CENTER: App title / mini logo -->
+    <div class="header-title">
+      <svg width="100" height="22" viewBox="0 0 320 70" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(160 38) scale(0.45)" stroke="currentColor" stroke-width="20" fill="none" stroke-linecap="square">
+          <line x1="-160" y1="-60" x2="-160" y2="60"/>
+          <line x1="-115" y1="-60" x2="-115" y2="60"/>
+          <line x1="-160" y1="0" x2="-115" y2="0"/>
+          <circle cx="-55" cy="0" r="55"/>
+          <path d="M 5 -35 Q 5 -55 35 -55 Q 65 -55 65 -35 Q 65 -15 35 -10 Q 5 -5 5 25 Q 5 45 35 45 Q 65 45 65 25"/>
+          <path d="M 90 -35 Q 90 -55 120 -55 Q 150 -55 150 -35 Q 150 -15 120 -10 Q 90 -5 90 25 Q 90 45 120 45 Q 150 45 150 25"/>
+          <circle cx="190" cy="0" r="55"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- RIGHT: Hamburger menu -->
+    <button class="header-menu" @click="ui.showDrawer = true" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <!-- Slim error banner if sync failed (only when needed) -->
+  <div class="header-banner" x-show="sync.status === 'signed-out' || sync.status === 'error'">
+    <span x-show="sync.status === 'signed-out'">⚠️ غير مسجل — اضغط ☰ وسجّل دخول</span>
+    <span x-show="sync.status === 'error'">⚠️ خطأ في المزامنة</span>
+  </div>
+</header>
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <!-- LOCK SCREEN (v1.7) — iOS-style PIN entry                -->
@@ -2815,7 +2885,7 @@ body::before {
 
   <!-- Footer -->
   <p class="text-center mt-8 t-caption2" style="color: var(--ink-4); padding-bottom: env(safe-area-inset-bottom, 0px)">
-    حسام ليف · Hossam Life · v2.9
+    حسام ليف · Hossam Life · v3.0
   </p>
 
 </div>
@@ -3543,7 +3613,7 @@ body::before {
 
         <div class="glass-strong p-4 rounded-2xl">
           <p class="t-caption2 mb-2">عن · ABOUT</p>
-          <p class="t-footnote">حسام ليف · إصدار 2.9 — Cinematic Redesign</p>
+          <p class="t-footnote">حسام ليف · إصدار 3.0 — Proper Header Bar</p>
           <p class="t-caption1 font-en mt-1">Built with care for Hossam</p>
         </div>
       </div>
