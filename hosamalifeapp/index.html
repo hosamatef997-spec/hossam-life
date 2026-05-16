@@ -3290,7 +3290,7 @@ body::before {
 
         <div class="glass-strong p-4 rounded-2xl">
           <p class="t-caption2 mb-2">عن · ABOUT</p>
-          <p class="t-footnote">حسام ليف · إصدار 2.7.2 — Mobile Mega Compact</p>
+          <p class="t-footnote">حسام ليف · إصدار 2.8 — HOSSO Studio bridge</p>
           <p class="t-caption1 font-en mt-1">Built with care for Hossam</p>
         </div>
       </div>
@@ -4606,9 +4606,23 @@ function app() {
             caption: d.text || d.title || item.raw_text || '',
           });
           added = 'فكرة تصوير';
-        } else if (t === 'post_idea') {
-          this.tasks.push({ id: 'task-' + Date.now(), text: '📸 فكرة بوست: ' + (d.text || item.raw_text), done: false });
-          added = 'فكرة بوست';
+        } else if (t === 'post_idea' || t === 'post_added') {
+          // v2.8 — HOSSO Studio integration: add to postTracker
+          const todayKey = new Date().toISOString().slice(0, 10);
+          const caption = d.title || d.summary || d.text || item.summary || item.raw_text || 'بوست جديد';
+          const url = d.handle ? 'https://www.instagram.com/' + (d.handle.replace('@', '')) : '';
+          if (!this.postTracker) this.postTracker = {};
+          // If today already has a post, use a unique key with timestamp suffix
+          const slotKey = this.postTracker[todayKey] ? (todayKey + '-' + Date.now()) : todayKey;
+          this.postTracker[slotKey] = {
+            url: url,
+            thumb: null,
+            caption: caption,
+            source: d.machine ? ('HOSSO Studio · ' + d.machine) : 'يدوي',
+            slides_count: d.slides_count || 1,
+            ts: Date.now(),
+          };
+          added = '📸 بوست في Post Calendar';
         } else {
           this.tasks.push({ id: 'task-' + Date.now(), text: item.raw_text || item.summary || 'ملاحظة', done: false });
           added = 'ملاحظة';
@@ -4634,7 +4648,8 @@ function app() {
     inboxItemIcon(type) {
       const map = {
         task: '✅', expense: '💸', habit: '🔥', devotion: '🕌',
-        note: '📝', photo_idea: '📸', shoot_idea: '🎬', post_idea: '📱',
+        note: '📝', photo_idea: '📸', shoot_idea: '🎬',
+        post_idea: '📱', post_added: '🎨',
       };
       return map[type] || '📩';
     },
