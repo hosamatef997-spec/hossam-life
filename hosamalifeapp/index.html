@@ -1294,6 +1294,14 @@ body::before {
       </svg>
     </div>
 
+    <!-- v3.1 — Search icon -->
+    <button class="header-menu" @click="ui.showSearch = true" aria-label="Search" style="margin-inline-end: 6px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </button>
+
     <!-- RIGHT: Hamburger menu -->
     <button class="header-menu" @click="ui.showDrawer = true" aria-label="Menu">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -2697,6 +2705,78 @@ body::before {
     </div>
     <!-- END voiceMemos wrap -->
 
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- v3.3 — HEALTH WIDGET (water · sleep · mood)             -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="widget-wrap" data-widget-key="health" :class="widgetClass('health')" x-show="widgets.health.visible || ui.editMode" :style="!widgets.health.visible && ui.editMode ? 'opacity: 0.4' : ''">
+      <div class="widget-controls">
+        <button class="widget-ctl size" @click="ui.sizePickerFor = ui.sizePickerFor === 'health' ? null : 'health'"><span x-text="widgets.health.size.toUpperCase()"></span></button>
+        <button class="widget-ctl delete" @click="toggleWidgetVisible('health')">×</button>
+      </div>
+      <div class="size-picker" x-show="ui.sizePickerFor === 'health'">
+        <button :class="{active: widgets.health.size === 'm'}" @click="setWidgetSize('health', 'm')">M</button>
+        <button :class="{active: widgets.health.size === 'l'}" @click="setWidgetSize('health', 'l')">L</button>
+        <button :class="{active: widgets.health.size === 'xl'}" @click="setWidgetSize('health', 'xl')">XL</button>
+      </div>
+      <div class="reorder-arrows">
+        <button class="reorder-arrow" :disabled="isFirstVisible('health')" @click="moveWidgetUp('health')" title="حرك فوق">↑</button>
+        <button class="reorder-arrow" :disabled="isLastVisible('health')" @click="moveWidgetDown('health')" title="حرك تحت">↓</button>
+      </div>
+      <div class="glass p-5 fade-up" style="height: 100%">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="row-icon" style="background: linear-gradient(135deg, #34C759, #00C7BE)">💚</div>
+            <div>
+              <p class="t-title3">الصحة</p>
+              <p class="t-footnote font-en" style="color: var(--ink-3)">Health Today</p>
+            </div>
+          </div>
+          <button class="btn btn-blue" style="padding: 6px 12px; font-size: 13px" @click="ui.showHealth = true">تفاصيل</button>
+        </div>
+
+        <!-- Water progress -->
+        <div class="p-4 rounded-2xl mb-3" style="background: linear-gradient(135deg, rgba(0,199,190,0.12), rgba(0,122,255,0.12))">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <p class="t-caption2" style="color: #00C7BE">💧 الماء · WATER</p>
+              <p class="font-en mt-1" style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px">
+                <span x-text="health.waterToday || 0"></span>
+                <span style="font-size: 13px; color: var(--ink-3)"> / <span x-text="health.waterGoal"></span> كاسة</span>
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn" style="padding: 8px 12px; background: rgba(0,199,190,0.15); color: #00C7BE; font-weight: 700; font-size: 16px" @click="removeWater()" :disabled="!(health.waterToday > 0)">−</button>
+              <button class="btn" style="padding: 8px 14px; background: linear-gradient(135deg, #00C7BE, #007AFF); color: white; font-weight: 700; font-size: 16px" @click="addWater()">+</button>
+            </div>
+          </div>
+          <div style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden">
+            <div :style="`width: ${waterPct}%; height: 100%; background: linear-gradient(90deg, #00C7BE, #007AFF); border-radius: 99px; transition: width 0.3s`"></div>
+          </div>
+        </div>
+
+        <!-- Sleep + Mood row -->
+        <div class="grid grid-cols-2 gap-3">
+          <button @click="ui.tempSleep = todaySleep ? { hours: todaySleep.hours, quality: todaySleep.quality } : { hours: 7, quality: 'good' }; ui.showSleepSheet = true"
+                  class="p-3 rounded-2xl text-right" style="background: linear-gradient(135deg, rgba(88,86,214,0.12), rgba(175,82,222,0.12)); border: none; cursor: pointer">
+            <p class="t-caption2" style="color: #AF52DE">😴 النوم</p>
+            <p class="font-en mt-1" style="font-size: 18px; font-weight: 800">
+              <template x-if="todaySleep"><span><span x-text="todaySleep.hours"></span><span style="font-size: 11px; color: var(--ink-3)">سا</span></span></template>
+              <template x-if="!todaySleep"><span style="color: var(--ink-4); font-size: 14px">سجّل</span></template>
+            </p>
+          </button>
+          <button @click="ui.showMoodSheet = true"
+                  class="p-3 rounded-2xl text-right" style="background: linear-gradient(135deg, rgba(255,149,0,0.12), rgba(255,204,0,0.12)); border: none; cursor: pointer">
+            <p class="t-caption2" style="color: #FF9500">🎭 المزاج</p>
+            <p class="mt-1" style="font-size: 22px">
+              <template x-if="todayMood"><span x-text="todayMood.emoji"></span></template>
+              <template x-if="!todayMood"><span style="color: var(--ink-4); font-size: 14px">سجّل</span></template>
+            </p>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- END health wrap -->
+
     <!-- ─── CUSTOM WIDGETS (user-created) ─── -->
     <template x-for="cw in customWidgets" :key="cw.id">
       <div class="widget-wrap" :class="'w-size-' + (cw.size || 'm')" x-show="(cw.visible !== false) || ui.editMode" :style="((cw.visible === false) && ui.editMode ? 'opacity: 0.4; ' : '') + 'order: 100'">
@@ -2885,7 +2965,7 @@ body::before {
 
   <!-- Footer -->
   <p class="text-center mt-8 t-caption2" style="color: var(--ink-4); padding-bottom: env(safe-area-inset-bottom, 0px)">
-    حسام ليف · Hossam Life · v3.0
+    حسام ليف · Hossam Life · v3.3 — Health Tracker
   </p>
 
 </div>
@@ -3057,6 +3137,689 @@ body::before {
 </template>
 
 <!-- ═══════════════════════════════════════════════════════ -->
+<!-- v3.2 — HOSSO VISUALS PAGE (full-screen)                 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<template x-if="ui.showHosso">
+  <div style="position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #1a1208 0%, #2A1F12 100%); color: #EEE7D9; overflow-y: auto; -webkit-overflow-scrolling: touch; animation: pageSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)">
+    <!-- Sticky header -->
+    <div style="position: sticky; top: 0; z-index: 10; background: rgba(26,18,8,0.92); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 0.5px solid rgba(176,143,58,0.25); padding: 12px 16px">
+      <div class="flex items-center justify-between" style="max-width: 700px; margin: 0 auto">
+        <button @click="ui.showHosso = false" style="display: flex; align-items: center; gap: 4px; background: transparent; border: none; color: #EEE7D9; cursor: pointer; padding: 6px 10px; font-size: 14px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          رجوع
+        </button>
+        <p class="t-headline" style="margin: 0; color: #EEE7D9">📸 HOSSO Visuals</p>
+        <div style="width: 60px"></div>
+      </div>
+    </div>
+
+    <div style="max-width: 700px; margin: 0 auto; padding: 16px">
+      <!-- Hero stats -->
+      <div style="background: linear-gradient(135deg, rgba(176,143,58,0.18), rgba(176,143,58,0.06)); border: 1px solid rgba(176,143,58,0.3); border-radius: 20px; padding: 20px; margin-bottom: 16px">
+        <p style="font-size: 11px; letter-spacing: 1px; color: #B08F3A; text-transform: uppercase">دخل الشهر</p>
+        <p style="font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-top: 6px" x-text="formatMoney(hossoIncomeThisMonth) + ' د.إ'"></p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px">
+          <div style="background: rgba(0,0,0,0.25); padding: 10px; border-radius: 10px">
+            <p style="font-size: 10px; color: #B08F3A; text-transform: uppercase; letter-spacing: 1px">السنة</p>
+            <p style="font-size: 18px; font-weight: 700; margin-top: 4px" x-text="formatMoney(hossoIncomeYTD) + ' د.إ'"></p>
+          </div>
+          <div style="background: rgba(0,0,0,0.25); padding: 10px; border-radius: 10px">
+            <p style="font-size: 10px; color: #FF9500; text-transform: uppercase; letter-spacing: 1px">معلق</p>
+            <p style="font-size: 18px; font-weight: 700; margin-top: 4px; color: #FF9500" x-text="formatMoney(hossoPendingTotal) + ' د.إ'"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 14px">
+        <button @click="ui.hossoTab = 'projects'" :style="ui.hossoTab === 'projects' ? 'background: #B08F3A; color: #1a1208' : 'background: transparent; color: #EEE7D9'" style="padding: 8px 4px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: 0.2s">📋 المشاريع</button>
+        <button @click="ui.hossoTab = 'clients'" :style="ui.hossoTab === 'clients' ? 'background: #B08F3A; color: #1a1208' : 'background: transparent; color: #EEE7D9'" style="padding: 8px 4px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: 0.2s">👥 العملاء</button>
+        <button @click="ui.hossoTab = 'services'" :style="ui.hossoTab === 'services' ? 'background: #B08F3A; color: #1a1208' : 'background: transparent; color: #EEE7D9'" style="padding: 8px 4px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: 0.2s">💰 الأسعار</button>
+      </div>
+
+      <!-- TAB: Projects -->
+      <div x-show="ui.hossoTab === 'projects'">
+        <button @click="ui.showHossoNewProject = true" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #B08F3A, #8B6F2A); color: #1a1208; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-bottom: 12px; font-size: 14px">+ مشروع جديد</button>
+
+        <div x-show="hossoVisuals.projects.length === 0" style="text-align: center; padding: 40px 20px; opacity: 0.6">
+          <p style="font-size: 50px">📸</p>
+          <p style="margin-top: 10px">مفيش مشاريع لسه — أضف أول مشروع</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <template x-for="p in hossoVisuals.projects" :key="p.id">
+            <div style="background: rgba(238,231,217,0.06); border: 1px solid rgba(238,231,217,0.12); border-radius: 14px; padding: 14px">
+              <div class="flex items-start justify-between" style="margin-bottom: 8px">
+                <div style="flex: 1; min-width: 0">
+                  <p style="font-weight: 700; font-size: 15px" x-text="p.title"></p>
+                  <p style="font-size: 12px; color: #B08F3A; margin-top: 2px" x-text="'👤 ' + p.clientName"></p>
+                </div>
+                <p style="font-weight: 700; font-size: 16px; color: #B08F3A" x-text="formatMoney(p.amount) + ' د.إ'"></p>
+              </div>
+              <p style="font-size: 11px; opacity: 0.6; margin-bottom: 10px" x-text="'📅 ' + p.date + ' · ' + (p.type || '')"></p>
+
+              <!-- Status pills -->
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px">
+                <template x-for="s in ['planned','shooting','delivered','paid']" :key="s">
+                  <button @click="updateProjectStatus(p.id, s)" :style="`background: ${p.status === s ? projectStatusInfo(s).color : 'rgba(238,231,217,0.08)'}; color: ${p.status === s ? 'white' : '#EEE7D9'}; border: none; padding: 6px 4px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 700`" x-text="projectStatusInfo(s).icon + ' ' + projectStatusInfo(s).label"></button>
+                </template>
+              </div>
+
+              <div x-show="p.notes" style="font-size: 12px; opacity: 0.7; padding: 6px 0; border-top: 0.5px solid rgba(238,231,217,0.1); margin-top: 6px" x-text="p.notes"></div>
+
+              <button @click="deleteHossoProject(p.id)" style="margin-top: 6px; background: rgba(255,59,48,0.15); color: #FF6B6B; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer">🗑 حذف</button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- TAB: Clients -->
+      <div x-show="ui.hossoTab === 'clients'">
+        <button @click="ui.showHossoNewClient = true" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #B08F3A, #8B6F2A); color: #1a1208; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-bottom: 12px; font-size: 14px">+ عميل جديد</button>
+
+        <div x-show="hossoVisuals.clients.length === 0" style="text-align: center; padding: 40px 20px; opacity: 0.6">
+          <p style="font-size: 50px">👥</p>
+          <p style="margin-top: 10px">مفيش عملاء لسه</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <template x-for="c in hossoVisuals.clients" :key="c.id">
+            <div style="background: rgba(238,231,217,0.06); border: 1px solid rgba(238,231,217,0.12); border-radius: 14px; padding: 14px">
+              <div class="flex items-start justify-between">
+                <div style="flex: 1">
+                  <p style="font-weight: 700; font-size: 15px" x-text="c.name"></p>
+                  <p x-show="c.phone" style="font-size: 12px; opacity: 0.7; margin-top: 2px" x-text="'📞 ' + c.phone"></p>
+                  <p x-show="c.email" style="font-size: 12px; opacity: 0.7" x-text="'📧 ' + c.email"></p>
+                  <p x-show="c.notes" style="font-size: 11px; opacity: 0.6; margin-top: 4px" x-text="c.notes"></p>
+                </div>
+                <div style="text-align: end">
+                  <p style="font-size: 11px; color: #B08F3A; text-transform: uppercase">الإجمالي</p>
+                  <p style="font-weight: 700; font-size: 18px; color: #B08F3A" x-text="formatMoney(c.totalEarned || 0)"></p>
+                  <p style="font-size: 10px; opacity: 0.6">د.إ</p>
+                </div>
+              </div>
+              <button @click="deleteHossoClient(c.id)" style="margin-top: 8px; background: rgba(255,59,48,0.15); color: #FF6B6B; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer">🗑</button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- TAB: Services -->
+      <div x-show="ui.hossoTab === 'services'">
+        <p style="font-size: 12px; opacity: 0.7; margin-bottom: 12px; text-align: center">قائمة الأسعار للخدمات بتاعتك</p>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <template x-for="s in hossoVisuals.services" :key="s.id">
+            <div style="background: rgba(238,231,217,0.06); border: 1px solid rgba(238,231,217,0.12); border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 12px">
+              <span style="font-size: 30px" x-text="s.icon"></span>
+              <div style="flex: 1">
+                <p style="font-weight: 700; font-size: 15px" x-text="s.name"></p>
+                <p style="font-size: 11px; opacity: 0.7" x-text="s.duration"></p>
+              </div>
+              <div style="text-align: end">
+                <p style="font-weight: 800; font-size: 22px; color: #B08F3A" x-text="s.price"></p>
+                <p style="font-size: 10px; opacity: 0.6">د.إ</p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Top clients (always visible at bottom) -->
+      <div x-show="hossoTopClients.length > 0 && ui.hossoTab === 'projects'" style="margin-top: 20px">
+        <p style="font-size: 11px; letter-spacing: 1px; color: #B08F3A; text-transform: uppercase; margin-bottom: 10px">⭐ أفضل العملاء</p>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <template x-for="c in hossoTopClients" :key="c.id">
+            <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: rgba(176,143,58,0.08); border-radius: 8px">
+              <p style="font-size: 13px" x-text="c.name"></p>
+              <p style="font-size: 13px; font-weight: 700; color: #B08F3A" x-text="formatMoney(c.totalEarned) + ' د.إ'"></p>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div style="text-align: center; padding: 30px 0; opacity: 0.4; font-size: 11px">
+        HOSSO Visuals · Hossam Life v3.2
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- v3.3 — HEALTH FULL PAGE (water · sleep · mood)          -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<template x-if="ui.showHealth">
+  <div style="position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #0a1410 0%, #0f1d18 100%); color: #EEE7D9; overflow-y: auto; -webkit-overflow-scrolling: touch; animation: pageSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)">
+    <!-- Sticky header -->
+    <div style="position: sticky; top: 0; z-index: 10; background: rgba(10,20,16,0.92); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 0.5px solid rgba(52,199,89,0.25); padding: 12px 16px">
+      <div class="flex items-center justify-between" style="max-width: 700px; margin: 0 auto">
+        <button @click="ui.showHealth = false" style="display: flex; align-items: center; gap: 4px; background: transparent; border: none; color: #EEE7D9; cursor: pointer; padding: 6px 10px; font-size: 14px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          رجوع
+        </button>
+        <p class="t-headline" style="margin: 0; color: #EEE7D9">💚 الصحة</p>
+        <div style="width: 60px"></div>
+      </div>
+    </div>
+
+    <div style="max-width: 700px; margin: 0 auto; padding: 16px">
+      <!-- WATER HERO -->
+      <div style="background: linear-gradient(135deg, rgba(0,199,190,0.18), rgba(0,122,255,0.08)); border: 1px solid rgba(0,199,190,0.3); border-radius: 20px; padding: 20px; margin-bottom: 16px">
+        <p style="font-size: 11px; letter-spacing: 1px; color: #00C7BE; text-transform: uppercase">💧 الماء اليوم</p>
+        <p style="font-size: 44px; font-weight: 800; letter-spacing: -1px; margin-top: 6px">
+          <span x-text="health.waterToday || 0"></span>
+          <span style="font-size: 18px; color: var(--ink-3)"> / <span x-text="health.waterGoal"></span></span>
+        </p>
+        <div style="height: 12px; background: rgba(0,0,0,0.3); border-radius: 99px; overflow: hidden; margin-top: 12px">
+          <div :style="`width: ${waterPct}%; height: 100%; background: linear-gradient(90deg, #00C7BE, #007AFF); border-radius: 99px; transition: width 0.4s ease-out`"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px">
+          <button @click="removeWater()" :disabled="!(health.waterToday > 0)" style="padding: 14px; background: rgba(0,199,190,0.12); color: #00C7BE; border: 1px solid rgba(0,199,190,0.25); border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 16px">−</button>
+          <button @click="addWater()" style="padding: 14px; background: linear-gradient(135deg, #00C7BE, #007AFF); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 16px">+</button>
+        </div>
+        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 10px">
+          <p style="font-size: 12px; opacity: 0.7">الهدف اليومي</p>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <button @click="health.waterGoal = Math.max(1, health.waterGoal - 1); saveState()" style="background: transparent; color: #00C7BE; border: 1px solid rgba(0,199,190,0.3); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: 700">−</button>
+            <span style="font-weight: 700; min-width: 30px; text-align: center" x-text="health.waterGoal"></span>
+            <button @click="health.waterGoal = Math.min(20, health.waterGoal + 1); saveState()" style="background: transparent; color: #00C7BE; border: 1px solid rgba(0,199,190,0.3); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: 700">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLEEP + MOOD ROW -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px">
+        <!-- Sleep card -->
+        <button @click="ui.tempSleep = todaySleep ? { hours: todaySleep.hours, quality: todaySleep.quality } : { hours: 7, quality: 'good' }; ui.showSleepSheet = true"
+                style="background: linear-gradient(135deg, rgba(88,86,214,0.15), rgba(175,82,222,0.08)); border: 1px solid rgba(175,82,222,0.3); border-radius: 16px; padding: 14px; cursor: pointer; text-align: right; color: #EEE7D9">
+          <p style="font-size: 11px; letter-spacing: 1px; color: #AF52DE; text-transform: uppercase">😴 النوم</p>
+          <template x-if="todaySleep">
+            <div>
+              <p style="font-size: 28px; font-weight: 800; margin-top: 4px">
+                <span x-text="todaySleep.hours"></span><span style="font-size: 13px; color: var(--ink-3)">سا</span>
+              </p>
+              <p style="font-size: 11px; opacity: 0.7; margin-top: 2px" x-text="todaySleep.quality === 'great' ? 'ممتاز' : todaySleep.quality === 'good' ? 'كويس' : todaySleep.quality === 'okay' ? 'وسط' : 'تعبان'"></p>
+            </div>
+          </template>
+          <template x-if="!todaySleep">
+            <p style="margin-top: 12px; opacity: 0.6; font-size: 13px">اضغط للتسجيل</p>
+          </template>
+          <p style="font-size: 10px; margin-top: 8px; opacity: 0.5">المتوسط 7 أيام: <span x-text="avgSleep7Days"></span>سا</p>
+        </button>
+
+        <!-- Mood card -->
+        <button @click="ui.showMoodSheet = true"
+                style="background: linear-gradient(135deg, rgba(255,149,0,0.15), rgba(255,204,0,0.08)); border: 1px solid rgba(255,149,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; text-align: right; color: #EEE7D9">
+          <p style="font-size: 11px; letter-spacing: 1px; color: #FF9500; text-transform: uppercase">🎭 المزاج</p>
+          <template x-if="todayMood">
+            <div>
+              <p style="font-size: 38px; margin-top: 4px" x-text="todayMood.emoji"></p>
+              <p style="font-size: 11px; opacity: 0.7" x-text="todayMood.label"></p>
+            </div>
+          </template>
+          <template x-if="!todayMood">
+            <p style="margin-top: 12px; opacity: 0.6; font-size: 13px">اضغط للتسجيل</p>
+          </template>
+        </button>
+      </div>
+
+      <!-- SLEEP HISTORY -->
+      <div x-show="sleepHistoryList.length > 0" style="margin-bottom: 18px">
+        <p style="font-size: 11px; letter-spacing: 1px; color: #AF52DE; text-transform: uppercase; margin-bottom: 10px">📊 سجل النوم</p>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <template x-for="s in sleepHistoryList" :key="s.date">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(175,82,222,0.08); border-radius: 10px">
+              <div style="display: flex; align-items: center; gap: 10px">
+                <span style="font-size: 18px">😴</span>
+                <div>
+                  <p style="font-size: 13px; font-weight: 600" x-text="s.date"></p>
+                  <p style="font-size: 10px; opacity: 0.6" x-text="s.quality === 'great' ? 'ممتاز' : s.quality === 'good' ? 'كويس' : s.quality === 'okay' ? 'وسط' : 'تعبان'"></p>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <p style="font-size: 16px; font-weight: 800; color: #AF52DE" x-text="s.hours + 'سا'"></p>
+                <button @click="deleteSleepEntry(s.date)" style="background: rgba(255,59,48,0.15); color: #FF6B6B; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer">🗑</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- MOOD HISTORY -->
+      <div x-show="moodHistoryList.length > 0" style="margin-bottom: 18px">
+        <p style="font-size: 11px; letter-spacing: 1px; color: #FF9500; text-transform: uppercase; margin-bottom: 10px">🎭 سجل المزاج</p>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <template x-for="m in moodHistoryList" :key="m.date">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(255,149,0,0.08); border-radius: 10px">
+              <div style="display: flex; align-items: center; gap: 10px">
+                <span style="font-size: 26px" x-text="m.emoji"></span>
+                <div>
+                  <p style="font-size: 13px; font-weight: 600" x-text="m.label"></p>
+                  <p style="font-size: 10px; opacity: 0.6" x-text="m.date"></p>
+                  <p x-show="m.note" style="font-size: 11px; opacity: 0.7; margin-top: 2px" x-text="m.note"></p>
+                </div>
+              </div>
+              <button @click="deleteMoodEntry(m.date)" style="background: rgba(255,59,48,0.15); color: #FF6B6B; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer">🗑</button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div x-show="sleepHistoryList.length === 0 && moodHistoryList.length === 0" style="text-align: center; padding: 30px 20px; opacity: 0.6">
+        <p style="font-size: 40px">💚</p>
+        <p style="margin-top: 10px; font-size: 13px">ابدأ تسجيل نومك ومزاجك يومياً</p>
+      </div>
+
+      <div style="text-align: center; padding: 30px 0; opacity: 0.4; font-size: 11px">
+        Health · Hossam Life v3.3
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- v3.3 — Sleep Entry Sheet -->
+<template x-if="ui.showSleepSheet">
+  <div>
+    <div class="sheet-backdrop" @click="ui.showSleepSheet = false" style="z-index: 1500"></div>
+    <div class="sheet p-5" style="max-width: 500px; margin: 0 auto; right: 0; left: 0; z-index: 1510">
+      <div class="sheet-handle"></div>
+      <div class="flex items-center justify-between mb-5 mt-2">
+        <button class="btn btn-plain" @click="ui.showSleepSheet = false">إلغاء</button>
+        <p class="t-headline">😴 تسجيل النوم</p>
+        <button class="btn btn-plain" @click="saveSleep()" style="font-weight: 700">حفظ</button>
+      </div>
+      <div class="space-y-4">
+        <!-- Hours selector -->
+        <div>
+          <p class="t-caption2 mb-2">عدد الساعات</p>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 14px; padding: 16px; background: rgba(175,82,222,0.08); border-radius: 14px">
+            <button @click="ui.tempSleep.hours = Math.max(0, ui.tempSleep.hours - 0.5)" style="background: rgba(175,82,222,0.2); color: #AF52DE; border: none; width: 44px; height: 44px; border-radius: 10px; cursor: pointer; font-size: 22px; font-weight: 700">−</button>
+            <div style="text-align: center; min-width: 100px">
+              <p style="font-size: 42px; font-weight: 800; color: #AF52DE; letter-spacing: -1px" x-text="ui.tempSleep.hours"></p>
+              <p style="font-size: 11px; opacity: 0.7">ساعة</p>
+            </div>
+            <button @click="ui.tempSleep.hours = Math.min(14, ui.tempSleep.hours + 0.5)" style="background: rgba(175,82,222,0.2); color: #AF52DE; border: none; width: 44px; height: 44px; border-radius: 10px; cursor: pointer; font-size: 22px; font-weight: 700">+</button>
+          </div>
+        </div>
+        <!-- Quality -->
+        <div>
+          <p class="t-caption2 mb-2">جودة النوم</p>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px">
+            <template x-for="q in [{v:'great',l:'ممتاز',e:'🌟'},{v:'good',l:'كويس',e:'😊'},{v:'okay',l:'وسط',e:'😐'},{v:'bad',l:'تعبان',e:'😩'}]" :key="q.v">
+              <button @click="ui.tempSleep.quality = q.v"
+                      :style="ui.tempSleep.quality === q.v ? 'background: linear-gradient(135deg, #AF52DE, #5856D6); color: white; border: none' : 'background: rgba(175,82,222,0.08); color: var(--ink-1); border: 1px solid rgba(175,82,222,0.2)'"
+                      style="padding: 10px 4px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600">
+                <div style="font-size: 22px" x-text="q.e"></div>
+                <div x-text="q.l" style="margin-top: 2px"></div>
+              </button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- v3.3 — Mood Entry Sheet -->
+<template x-if="ui.showMoodSheet">
+  <div>
+    <div class="sheet-backdrop" @click="ui.showMoodSheet = false" style="z-index: 1500"></div>
+    <div class="sheet p-5" style="max-width: 500px; margin: 0 auto; right: 0; left: 0; z-index: 1510">
+      <div class="sheet-handle"></div>
+      <div class="flex items-center justify-between mb-5 mt-2">
+        <button class="btn btn-plain" @click="ui.showMoodSheet = false">إلغاء</button>
+        <p class="t-headline">🎭 تسجيل المزاج</p>
+        <button class="btn btn-plain" @click="saveMood()" style="font-weight: 700">حفظ</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <p class="t-caption2 mb-2">إزيك دلوقتي؟</p>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px">
+            <template x-for="m in [
+              {e:'🤩',l:'رائع'},{e:'😊',l:'كويس'},{e:'🙂',l:'عادي'},{e:'😐',l:'محايد'},
+              {e:'😴',l:'تعبان'},{e:'😔',l:'حزين'},{e:'😰',l:'قلقان'},{e:'😡',l:'متضايق'}
+            ]" :key="m.e">
+              <button @click="pickMood(m.e, m.l)"
+                      :style="ui.tempMood.emoji === m.e ? 'background: linear-gradient(135deg, #FF9500, #FFCC00); border: none; transform: scale(1.05)' : 'background: rgba(255,149,0,0.08); border: 1px solid rgba(255,149,0,0.2)'"
+                      style="padding: 12px 4px; border-radius: 12px; cursor: pointer; transition: 0.15s; color: var(--ink-1)">
+                <div style="font-size: 30px" x-text="m.e"></div>
+                <div style="font-size: 10px; margin-top: 4px; font-weight: 600" x-text="m.l"></div>
+              </button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">ملاحظة (اختياري)</p>
+          <textarea class="input" x-model="ui.tempMood.note" rows="2" placeholder="ايه اللي خلاك حاسس كده؟" style="resize: vertical"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- v3.2 — New Project Sheet -->
+<template x-if="ui.showHossoNewProject">
+  <div>
+    <div class="sheet-backdrop" @click="ui.showHossoNewProject = false" style="z-index: 1500"></div>
+    <div class="sheet p-5" style="max-width: 500px; margin: 0 auto; right: 0; left: 0; z-index: 1510">
+      <div class="sheet-handle"></div>
+      <div class="flex items-center justify-between mb-5 mt-2">
+        <button class="btn btn-plain" @click="ui.showHossoNewProject = false">إلغاء</button>
+        <p class="t-headline">📸 مشروع جديد</p>
+        <button class="btn btn-plain" @click="addHossoProject()" style="font-weight: 700">حفظ</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <p class="t-caption2 mb-1">اسم العميل · CLIENT</p>
+          <input type="text" class="input" x-model="newProject.clientName" placeholder="مثال: محمد أحمد" list="clients-list">
+          <datalist id="clients-list">
+            <template x-for="c in hossoVisuals.clients" :key="c.id">
+              <option :value="c.name"></option>
+            </template>
+          </datalist>
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">عنوان المشروع · TITLE</p>
+          <input type="text" class="input" x-model="newProject.title" placeholder="جلسة منتجات نقاء">
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">النوع</p>
+          <div class="grid grid-cols-4 gap-1">
+            <template x-for="t in ['صورة','فيديو','كاروسيل','حدث']" :key="t">
+              <button @click="newProject.type = t" :style="newProject.type === t ? 'background: var(--sf-blue); color: white' : 'background: rgba(120,120,128,0.1)'" style="padding: 8px 4px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px" x-text="t"></button>
+            </template>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <p class="t-caption2 mb-1">المبلغ (د.إ)</p>
+            <input type="number" class="input" x-model.number="newProject.amount" placeholder="500">
+          </div>
+          <div>
+            <p class="t-caption2 mb-1">التاريخ</p>
+            <input type="date" class="input" x-model="newProject.date">
+          </div>
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">ملاحظات (اختياري)</p>
+          <textarea class="input" x-model="newProject.notes" rows="2" placeholder="تفاصيل الجلسة..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- v3.2 — New Client Sheet -->
+<template x-if="ui.showHossoNewClient">
+  <div>
+    <div class="sheet-backdrop" @click="ui.showHossoNewClient = false" style="z-index: 1500"></div>
+    <div class="sheet p-5" style="max-width: 500px; margin: 0 auto; right: 0; left: 0; z-index: 1510">
+      <div class="sheet-handle"></div>
+      <div class="flex items-center justify-between mb-5 mt-2">
+        <button class="btn btn-plain" @click="ui.showHossoNewClient = false">إلغاء</button>
+        <p class="t-headline">👤 عميل جديد</p>
+        <button class="btn btn-plain" @click="addHossoClient()" style="font-weight: 700">حفظ</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <p class="t-caption2 mb-1">الاسم</p>
+          <input type="text" class="input" x-model="newClient.name" placeholder="الاسم">
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">رقم الموبايل (اختياري)</p>
+          <input type="tel" class="input" x-model="newClient.phone" placeholder="+971...">
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">إيميل (اختياري)</p>
+          <input type="email" class="input" x-model="newClient.email" placeholder="email@example.com">
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">ملاحظات</p>
+          <textarea class="input" x-model="newClient.notes" rows="2" placeholder="حاجات مهمة عنه..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- v3.1 — UNIVERSAL SEARCH (full-screen overlay)           -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<template x-if="ui.showSearch">
+  <div style="position: fixed; inset: 0; z-index: 1100; background: rgba(42,31,18,0.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: drawerFadeIn 0.2s ease" @click.self="ui.showSearch = false; ui.searchQuery = ''">
+    <div style="max-width: 640px; margin: 60px auto 20px; background: var(--card-bg-strong, rgba(255,255,255,0.95)); border-radius: 20px; overflow: hidden; max-height: calc(100vh - 100px); display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: pageSlideIn 0.25s ease">
+      <!-- Search input -->
+      <div style="padding: 16px; border-bottom: 0.5px solid rgba(60,60,67,0.18); display: flex; align-items: center; gap: 10px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" x-model="ui.searchQuery" placeholder="ابحث في كل حاجة..." style="flex: 1; border: none; outline: none; background: transparent; font-size: 16px; font-family: inherit; color: var(--ink)" autofocus>
+        <button @click="ui.showSearch = false; ui.searchQuery = ''" style="border: none; background: rgba(120,120,128,0.12); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Results -->
+      <div style="overflow-y: auto; padding: 12px">
+        <div x-show="!ui.searchQuery || ui.searchQuery.length < 2" class="text-center" style="padding: 40px 20px; color: var(--ink-4)">
+          <p style="font-size: 40px; margin-bottom: 8px">🔍</p>
+          <p class="t-callout">ابحث في مصاريفك، مهامك، أهدافك، ميموهاتك...</p>
+          <p class="t-caption1 mt-2">اكتب على الأقل حرفين</p>
+        </div>
+        <div x-show="ui.searchQuery.length >= 2 && searchResultsCount === 0" class="text-center" style="padding: 40px 20px; color: var(--ink-4)">
+          <p style="font-size: 40px; margin-bottom: 8px">🚫</p>
+          <p class="t-callout">مفيش نتائج</p>
+        </div>
+
+        <!-- Expenses -->
+        <div x-show="searchResults.expenses.length > 0" class="mb-3">
+          <p class="t-caption2 mb-2" style="color: var(--ink-4); padding: 0 6px">💸 مصاريف</p>
+          <template x-for="e in searchResults.expenses" :key="e.id">
+            <div class="row" style="padding: 10px 12px; border-radius: 10px; cursor: pointer" @click="ui.showSearch = false; ui.showFinanceFull = true; ui.expenseSearch = ui.searchQuery">
+              <span x-text="e.icon || '💵'"></span>
+              <div class="flex-1 min-w-0">
+                <p class="t-callout font-bold" x-text="e.label || 'مصروف'"></p>
+                <p class="t-caption1 font-en" style="color: var(--ink-4)" x-text="e.date + ' · ' + (e.category || '')"></p>
+              </div>
+              <p class="font-en font-bold" style="color: var(--sf-red)" x-text="formatMoney(e.amount) + ' د.إ'"></p>
+            </div>
+          </template>
+        </div>
+
+        <!-- Tasks -->
+        <div x-show="searchResults.tasks.length > 0" class="mb-3">
+          <p class="t-caption2 mb-2" style="color: var(--ink-4); padding: 0 6px">✅ مهام</p>
+          <template x-for="t in searchResults.tasks" :key="t.id">
+            <div class="row" style="padding: 10px 12px; border-radius: 10px">
+              <span x-text="t.done ? '✅' : '⬜'"></span>
+              <p class="flex-1 t-callout" :style="t.done ? 'text-decoration: line-through; color: var(--ink-4)' : ''" x-text="t.text"></p>
+            </div>
+          </template>
+        </div>
+
+        <!-- Goals -->
+        <div x-show="searchResults.goals.length > 0" class="mb-3">
+          <p class="t-caption2 mb-2" style="color: var(--ink-4); padding: 0 6px">🎯 أهداف</p>
+          <template x-for="g in searchResults.goals" :key="g.id">
+            <div class="row" style="padding: 10px 12px; border-radius: 10px; cursor: pointer" @click="ui.showSearch = false">
+              <span x-text="g.icon || '🎯'"></span>
+              <div class="flex-1 min-w-0">
+                <p class="t-callout font-bold" x-text="g.title"></p>
+                <p class="t-caption1 font-en" style="color: var(--ink-4)" x-text="goalProgress(g).pct + '% · ' + goalProgress(g).current + '/' + g.target"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Voice Memos -->
+        <div x-show="searchResults.memos.length > 0" class="mb-3">
+          <p class="t-caption2 mb-2" style="color: var(--ink-4); padding: 0 6px">🎙 ميمو صوتي</p>
+          <template x-for="m in searchResults.memos" :key="m.id">
+            <div class="row" style="padding: 10px 12px; border-radius: 10px">
+              <span x-text="inboxItemIcon(m.type)"></span>
+              <div class="flex-1 min-w-0">
+                <p class="t-callout font-bold" x-text="m.summary"></p>
+                <p class="t-caption1" style="color: var(--ink-3); word-wrap: break-word" x-text="m.raw_text"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Loved Ones -->
+        <div x-show="searchResults.lovedOnes.length > 0" class="mb-3">
+          <p class="t-caption2 mb-2" style="color: var(--ink-4); padding: 0 6px">💝 أحبابي</p>
+          <template x-for="p in searchResults.lovedOnes" :key="p.id">
+            <div class="row" style="padding: 10px 12px; border-radius: 10px">
+              <span>👤</span>
+              <div class="flex-1 min-w-0">
+                <p class="t-callout font-bold" x-text="p.name"></p>
+                <p class="t-caption1" style="color: var(--ink-3)" x-text="p.relationship + (p.notes ? ' · ' + p.notes : '')"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- v3.1 — STATISTICS & REPORTS (full-screen)               -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<template x-if="ui.showStats">
+  <div style="position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #FFF5F8 0%, #F0F4FF 100%); overflow-y: auto; -webkit-overflow-scrolling: touch; animation: pageSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)">
+    <div style="position: sticky; top: 0; z-index: 10; background: rgba(255,245,248,0.92); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 0.5px solid rgba(60,60,67,0.18); padding: 12px 16px">
+      <div class="flex items-center justify-between" style="max-width: 700px; margin: 0 auto">
+        <button class="btn btn-plain" @click="ui.showStats = false" style="display: flex; align-items: center; gap: 4px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          رجوع
+        </button>
+        <p class="t-headline" style="margin: 0">📊 الإحصائيات</p>
+        <div style="width: 60px"></div>
+      </div>
+    </div>
+    <div style="max-width: 700px; margin: 0 auto; padding: 16px">
+
+      <!-- Range selector -->
+      <div class="glass-strong p-3 rounded-2xl mb-4">
+        <div class="grid grid-cols-3 gap-1">
+          <button @click="ui.statsRange = 'week'" class="btn" :style="ui.statsRange === 'week' ? 'background: var(--sf-blue); color: white' : 'background: rgba(120,120,128,0.08)'" style="padding: 8px 4px; font-size: 12px">أسبوع</button>
+          <button @click="ui.statsRange = 'month'" class="btn" :style="ui.statsRange === 'month' ? 'background: var(--sf-blue); color: white' : 'background: rgba(120,120,128,0.08)'" style="padding: 8px 4px; font-size: 12px">شهر</button>
+          <button @click="ui.statsRange = 'year'" class="btn" :style="ui.statsRange === 'year' ? 'background: var(--sf-blue); color: white' : 'background: rgba(120,120,128,0.08)'" style="padding: 8px 4px; font-size: 12px">سنة</button>
+        </div>
+      </div>
+
+      <!-- Spending overview -->
+      <div class="glass p-5 rounded-2xl mb-4">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="row-icon" style="background: linear-gradient(135deg, var(--sf-red), var(--sf-orange))">💸</div>
+          <div>
+            <p class="t-title3">إجمالي الصرف</p>
+            <p class="t-footnote font-en" style="color: var(--ink-3)" x-text="ui.statsRange.toUpperCase()"></p>
+          </div>
+        </div>
+        <p class="font-en mt-2" style="font-size: 32px; font-weight: 800" x-text="formatMoney(statsExpensesTotal) + ' AED'"></p>
+
+        <!-- Daily spending bars -->
+        <div style="margin-top: 16px; display: flex; align-items: flex-end; gap: 3px; height: 100px; padding: 4px 0; border-bottom: 0.5px solid rgba(120,120,128,0.2)">
+          <template x-for="d in statsDaysSpending" :key="d.date">
+            <div :title="d.date + ': ' + d.total + ' د.إ'" :style="`flex: 1; height: ${d.height}%; min-height: 2px; background: linear-gradient(180deg, var(--sf-blue), var(--sf-purple)); border-radius: 2px 2px 0 0; cursor: pointer; opacity: ${d.total > 0 ? 1 : 0.2}`"></div>
+          </template>
+        </div>
+        <div class="flex justify-between mt-2" style="font-size: 10px; color: var(--ink-4)" x-show="ui.statsRange === 'week'">
+          <template x-for="d in statsDaysSpending" :key="d.date">
+            <span x-text="d.day"></span>
+          </template>
+        </div>
+      </div>
+
+      <!-- Categories breakdown -->
+      <div class="glass p-5 rounded-2xl mb-4" x-show="statsExpensesByCategory.length > 0">
+        <p class="t-headline mb-3">حسب الفئة</p>
+        <div class="space-y-2">
+          <template x-for="c in statsExpensesByCategory" :key="c.cat">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <p class="t-callout font-bold" x-text="c.cat"></p>
+                <p class="t-callout font-en font-bold" :style="`color: ${c.color}`" x-text="formatMoney(c.val) + ' د.إ'"></p>
+              </div>
+              <div class="progress" :style="`background: ${c.color}20; height: 8px`">
+                <div :style="`background: ${c.color}; width: ${c.pct}%`"></div>
+              </div>
+              <p class="t-caption2 mt-1" style="color: var(--ink-4)" x-text="c.pct + '%'"></p>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Devotion rate -->
+      <div class="glass p-5 rounded-2xl mb-4">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="row-icon" style="background: linear-gradient(135deg, var(--sf-green), var(--sf-mint))">🕌</div>
+          <div>
+            <p class="t-title3">معدل الصباحيات</p>
+            <p class="t-footnote font-en" style="color: var(--ink-3)" x-text="statsDevotionRate.done + ' / ' + statsDevotionRate.totalDays + ' days'"></p>
+          </div>
+        </div>
+        <p class="font-en mt-2" style="font-size: 32px; font-weight: 800; color: var(--sf-green)" x-text="statsDevotionRate.pct + '%'"></p>
+        <div class="progress mt-2" style="background: rgba(52,199,89,0.15); height: 10px">
+          <div :style="`background: linear-gradient(90deg, var(--sf-green), var(--sf-mint)); width: ${statsDevotionRate.pct}%`"></div>
+        </div>
+      </div>
+
+      <!-- Habits -->
+      <div class="glass p-5 rounded-2xl mb-4" x-show="statsHabitsBreakdown.length > 0">
+        <p class="t-headline mb-3">🔥 العادات</p>
+        <div class="space-y-3">
+          <template x-for="h in statsHabitsBreakdown" :key="h.name">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <p class="t-callout font-bold" x-text="h.name"></p>
+                <span class="t-caption2 px-2 py-1 rounded-full" style="background: rgba(255,149,0,0.15); color: var(--sf-orange); font-weight: 700" x-text="'🔥 ' + h.streak"></span>
+              </div>
+              <div class="progress" style="background: rgba(0,122,255,0.15); height: 8px">
+                <div :style="`background: var(--sf-blue); width: ${Math.min(100, h.pct)}%`"></div>
+              </div>
+              <p class="t-caption2 mt-1" style="color: var(--ink-4)" x-text="h.current + ' / ' + h.target + ' (' + h.pct + '%)'"></p>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Tasks completion -->
+      <div class="glass p-5 rounded-2xl mb-4">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="row-icon" style="background: linear-gradient(135deg, var(--sf-blue), var(--sf-purple))">✅</div>
+          <div>
+            <p class="t-title3">إنجاز المهام</p>
+            <p class="t-footnote font-en" style="color: var(--ink-3)" x-text="statsTasksCompletion.done + ' / ' + statsTasksCompletion.total"></p>
+          </div>
+        </div>
+        <p class="font-en mt-2" style="font-size: 28px; font-weight: 800" x-text="statsTasksCompletion.pct + '%'"></p>
+      </div>
+
+      <!-- Photos per month -->
+      <div class="glass p-5 rounded-2xl mb-4" x-show="statsPhotosPerMonth.length > 0">
+        <p class="t-headline mb-3">📸 صور كل شهر</p>
+        <div style="display: flex; align-items: flex-end; gap: 8px; height: 80px; padding: 4px 0">
+          <template x-for="m in statsPhotosPerMonth" :key="m.month">
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+              <p class="t-caption2 font-en" style="color: var(--ink-3)" x-text="m.count"></p>
+              <div :style="`width: 100%; height: ${m.height}%; min-height: 4px; background: linear-gradient(180deg, var(--sf-pink), var(--sf-orange)); border-radius: 3px 3px 0 0`"></div>
+              <p class="t-caption2 font-en" style="color: var(--ink-4)" x-text="m.month.slice(5)"></p>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div class="text-center pb-6 mt-4">
+        <p class="t-caption2 font-en" style="color: var(--ink-4)">Hossam Life · Stats v3.1</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ═══════════════════════════════════════════════════════ -->
 <!-- v2.9 — SIDE DRAWER (hamburger menu)                     -->
 <!-- ═══════════════════════════════════════════════════════ -->
 <template x-if="ui.showDrawer">
@@ -3125,9 +3888,44 @@ body::before {
         </button>
       </div>
 
+      <!-- Section: HOSSO Visuals -->
+      <div class="drawer-section">
+        <p class="drawer-section-title">📸 HOSSO Visuals</p>
+        <button class="drawer-item" @click="ui.showDrawer = false; ui.showHosso = true">
+          <span class="drawer-item-icon" style="background: linear-gradient(135deg, #2A1F12, #B08F3A); color: #EEE7D9">📸</span>
+          <span class="drawer-item-label">شغل التصوير</span>
+          <span class="t-caption2 font-en" style="color: var(--ink-3)" x-text="hossoActiveProjects + ' نشطة'"></span>
+        </button>
+      </div>
+
+      <!-- Section: الصحة -->
+      <div class="drawer-section">
+        <p class="drawer-section-title">💚 الصحة والعافية</p>
+        <button class="drawer-item" @click="ui.showDrawer = false; ui.showHealth = true">
+          <span class="drawer-item-icon" style="background: linear-gradient(135deg, #34C759, #00C7BE)">💚</span>
+          <span class="drawer-item-label">الصحة · ماء · نوم · مزاج</span>
+          <span class="t-caption2 font-en" style="color: var(--ink-3)" x-text="(health.waterToday || 0) + '/' + health.waterGoal + ' 💧'"></span>
+        </button>
+        <button class="drawer-item" @click="widgets.health.visible = true; localStorage.setItem('hl_show_health','1'); ui.showDrawer = false">
+          <span class="drawer-item-icon" style="background: rgba(52,199,89,0.15); color: #34C759">📌</span>
+          <span class="drawer-item-label">عرض الصحة على الصفحة الرئيسية</span>
+          <svg class="drawer-item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1)"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
       <!-- Section: الإنتاجية -->
       <div class="drawer-section">
         <p class="drawer-section-title">🎯 الإنتاجية</p>
+        <button class="drawer-item" @click="ui.showDrawer = false; ui.showStats = true">
+          <span class="drawer-item-icon" style="background: linear-gradient(135deg, var(--sf-blue), var(--sf-purple))">📊</span>
+          <span class="drawer-item-label">الإحصائيات والتقارير</span>
+          <svg class="drawer-item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1)"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="drawer-item" @click="ui.showDrawer = false; ui.showSearch = true">
+          <span class="drawer-item-icon" style="background: rgba(120,120,128,0.15)">🔍</span>
+          <span class="drawer-item-label">بحث شامل</span>
+          <svg class="drawer-item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1)"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
         <button class="drawer-item" @click="ui.showDrawer = false; ui.showGoalsSheet = true">
           <span class="drawer-item-icon" style="background: linear-gradient(135deg, var(--sf-orange), var(--sf-red))">🎯</span>
           <span class="drawer-item-label">أهدافي</span>
@@ -3613,7 +4411,7 @@ body::before {
 
         <div class="glass-strong p-4 rounded-2xl">
           <p class="t-caption2 mb-2">عن · ABOUT</p>
-          <p class="t-footnote">حسام ليف · إصدار 3.0 — Proper Header Bar</p>
+          <p class="t-footnote">حسام ليف · إصدار 3.2 — HOSSO Visuals Hub</p>
           <p class="t-caption1 font-en mt-1">Built with care for Hossam</p>
         </div>
       </div>
@@ -3990,6 +4788,24 @@ function app() {
       lastRefresh: 0,
       // v2.9 — Side drawer
       showDrawer: false,
+      // v3.1 — Universal Search + Stats
+      showSearch: false,
+      showStats: false,
+      searchQuery: '',
+      statsRange: 'month', // 'week' | 'month' | 'year'
+      // v3.2 — HOSSO Visuals
+      showHosso: false,
+      hossoTab: 'projects', // 'projects' | 'clients' | 'services'
+      showHossoNewProject: false,
+      showHossoNewClient: false,
+      newProject: { clientName: '', title: '', date: '', amount: 0, type: 'صورة', notes: '' },
+      newClient: { name: '', phone: '', email: '', notes: '' },
+      // v3.3 — Health
+      showHealth: false,
+      showSleepSheet: false,
+      showMoodSheet: false,
+      tempSleep: { hours: 7, quality: 'good' },
+      tempMood: { emoji: '🙂', label: 'كويس', note: '' },
       showCreateCustom: false,
       editMode: false,
       sizePickerFor: null,
@@ -4056,6 +4872,10 @@ function app() {
       netWorth:     { size: 'l',  visible: false, order: 16, section: 'main', ar: 'صافي الثروة',    en: 'Net Worth' },
       voiceMemos:   { size: 'l',  visible: false, order: 17, section: 'main', ar: 'ميمو صوتي',      en: 'Voice Memos' },
       hijriZakat:   { size: 'm',  visible: false, order: 4,  section: 'left', ar: 'هجري · زكاة',    en: 'Hijri & Zakat' },
+      // ─── v3.2 HOSSO Visuals ───
+      hossoVisuals: { size: 'l',  visible: false, order: 18, section: 'main', ar: 'HOSSO Visuals', en: 'HOSSO Visuals' },
+      // ─── v3.3 HEALTH ───
+      health:       { size: 'l',  visible: false, order: 19, section: 'main', ar: 'الصحة',          en: 'Health' },
     },
 
     // v2.6 — Phase 3 state
@@ -4073,6 +4893,27 @@ function app() {
     },
     voiceMemosArchive: [],
     zakatNisab: 9000, // AED — approximate equivalent of 85g gold
+
+    // v3.3 — Health tracker
+    health: {
+      waterToday: 0,
+      waterGoal: 8,
+      waterLastDay: '',
+      sleepHistory: {},  // { 'YYYY-MM-DD': { hours, quality } }
+      moodHistory: {},   // { 'YYYY-MM-DD': { emoji, label, note, ts } }
+    },
+
+    // v3.2 — HOSSO Visuals business module
+    hossoVisuals: {
+      clients: [],   // { id, name, phone, email, notes, totalEarned, createdAt }
+      projects: [],  // { id, clientId, title, date, status, amount, paid, notes, type }
+      services: [
+        { id: 'srv-1', name: 'جلسة تصوير شخصي', price: 300, duration: '1 ساعة', icon: '👤' },
+        { id: 'srv-2', name: 'تصوير منتجات', price: 500, duration: '2-3 ساعات', icon: '📦' },
+        { id: 'srv-3', name: 'كاروسيل سوشيال ميديا', price: 250, duration: 'يومين', icon: '📱' },
+        { id: 'srv-4', name: 'تصوير حدث', price: 800, duration: 'حسب الحدث', icon: '🎉' },
+      ],
+    },
 
     // v2.2 — Smart Inbox from Telegram bot
     inbox: {
@@ -6137,6 +6978,333 @@ function app() {
     },
 
     // ═════════════════════════════════════════════
+    // v3.2 — HOSSO VISUALS BUSINESS MODULE
+    // ═════════════════════════════════════════════
+    addHossoProject() {
+      const p = this.newProject;
+      if (!p.title.trim() || !p.clientName.trim() || !p.amount) {
+        return this.showToast('⚠️ املا الاسم والعنوان والمبلغ');
+      }
+      // Find or create client
+      let client = this.hossoVisuals.clients.find(c => c.name.trim().toLowerCase() === p.clientName.trim().toLowerCase());
+      if (!client) {
+        client = {
+          id: 'c-' + Date.now(),
+          name: p.clientName.trim(),
+          phone: '', email: '', notes: '',
+          totalEarned: 0,
+          createdAt: Date.now(),
+        };
+        this.hossoVisuals.clients.push(client);
+      }
+      this.hossoVisuals.projects.unshift({
+        id: 'p-' + Date.now(),
+        clientId: client.id,
+        clientName: client.name,
+        title: p.title.trim(),
+        date: p.date || new Date().toISOString().slice(0, 10),
+        status: 'planned', // planned | shooting | delivered | paid
+        amount: Number(p.amount) || 0,
+        paid: false,
+        type: p.type || 'صورة',
+        notes: p.notes || '',
+        createdAt: Date.now(),
+      });
+      this.newProject = { clientName: '', title: '', date: '', amount: 0, type: 'صورة', notes: '' };
+      this.ui.showHossoNewProject = false;
+      this.saveState();
+      this.showToast('✅ تم إضافة المشروع');
+    },
+    updateProjectStatus(id, status) {
+      const p = this.hossoVisuals.projects.find(x => x.id === id);
+      if (!p) return;
+      p.status = status;
+      if (status === 'paid' && !p.paid) {
+        p.paid = true;
+        const client = this.hossoVisuals.clients.find(c => c.id === p.clientId);
+        if (client) client.totalEarned = (client.totalEarned || 0) + (Number(p.amount) || 0);
+        // Optionally add to personal balance
+        this.finance.balance = (Number(this.finance.balance) || 0) + (Number(p.amount) || 0);
+        this.showToast('💰 +' + this.formatMoney(p.amount) + ' د.إ في رصيدك');
+      }
+      this.saveState();
+    },
+    deleteHossoProject(id) {
+      if (!confirm('احذف المشروع؟')) return;
+      this.hossoVisuals.projects = this.hossoVisuals.projects.filter(p => p.id !== id);
+      this.saveState();
+    },
+    addHossoClient() {
+      const c = this.newClient;
+      if (!c.name.trim()) return this.showToast('⚠️ أدخل الاسم');
+      this.hossoVisuals.clients.push({
+        id: 'c-' + Date.now(),
+        name: c.name.trim(),
+        phone: c.phone || '',
+        email: c.email || '',
+        notes: c.notes || '',
+        totalEarned: 0,
+        createdAt: Date.now(),
+      });
+      this.newClient = { name: '', phone: '', email: '', notes: '' };
+      this.ui.showHossoNewClient = false;
+      this.saveState();
+      this.showToast('✅ تم إضافة العميل');
+    },
+    deleteHossoClient(id) {
+      if (!confirm('احذف العميل ومشاريعه؟')) return;
+      this.hossoVisuals.clients = this.hossoVisuals.clients.filter(c => c.id !== id);
+      this.hossoVisuals.projects = this.hossoVisuals.projects.filter(p => p.clientId !== id);
+      this.saveState();
+    },
+    projectStatusInfo(status) {
+      const map = {
+        planned:   { label: 'مخطط',     color: '#8E8E93', icon: '📅' },
+        shooting:  { label: 'تصوير',    color: '#FF9500', icon: '📸' },
+        delivered: { label: 'تسليم',    color: '#5856D6', icon: '📤' },
+        paid:      { label: 'مدفوع',    color: '#34C759', icon: '✅' },
+      };
+      return map[status] || map.planned;
+    },
+
+    get hossoIncomeThisMonth() {
+      const monthStart = new Date().toISOString().slice(0, 7);
+      return this.hossoVisuals.projects
+        .filter(p => p.paid && (p.date || '').startsWith(monthStart))
+        .reduce((s, p) => s + (Number(p.amount) || 0), 0);
+    },
+    get hossoIncomeYTD() {
+      const yearStart = new Date().getFullYear().toString();
+      return this.hossoVisuals.projects
+        .filter(p => p.paid && (p.date || '').startsWith(yearStart))
+        .reduce((s, p) => s + (Number(p.amount) || 0), 0);
+    },
+    get hossoPendingTotal() {
+      return this.hossoVisuals.projects
+        .filter(p => !p.paid)
+        .reduce((s, p) => s + (Number(p.amount) || 0), 0);
+    },
+    get hossoActiveProjects() {
+      return this.hossoVisuals.projects.filter(p => p.status !== 'paid').length;
+    },
+    get hossoTopClients() {
+      return [...this.hossoVisuals.clients]
+        .sort((a, b) => (b.totalEarned || 0) - (a.totalEarned || 0))
+        .slice(0, 5);
+    },
+
+    // ═════════════════════════════════════════════
+    // v3.3 — HEALTH TRACKER (water · sleep · mood)
+    // ═════════════════════════════════════════════
+    addWater() {
+      // Safety: rollover check
+      const today = new Date().toISOString().slice(0, 10);
+      if (this.health.waterLastDay && this.health.waterLastDay !== today) {
+        this.health.waterToday = 0;
+      }
+      this.health.waterToday = (this.health.waterToday || 0) + 1;
+      this.health.waterLastDay = today;
+      if (this.health.waterToday === this.health.waterGoal) {
+        this.showToast('💧 ممتاز! وصلت لهدف اليوم');
+      }
+      this.saveState();
+    },
+    removeWater() {
+      this.health.waterToday = Math.max(0, (this.health.waterToday || 0) - 1);
+      this.saveState();
+    },
+    saveSleep() {
+      const today = new Date().toISOString().slice(0, 10);
+      const hrs = Math.max(0, Math.min(14, Number(this.ui.tempSleep.hours) || 7));
+      this.health.sleepHistory[today] = {
+        hours: hrs,
+        quality: this.ui.tempSleep.quality || 'good',
+        ts: Date.now(),
+      };
+      this.ui.showSleepSheet = false;
+      this.saveState();
+      this.showToast('😴 تم تسجيل النوم');
+    },
+    saveMood() {
+      const today = new Date().toISOString().slice(0, 10);
+      this.health.moodHistory[today] = {
+        emoji: this.ui.tempMood.emoji || '🙂',
+        label: this.ui.tempMood.label || '',
+        note: (this.ui.tempMood.note || '').trim(),
+        ts: Date.now(),
+      };
+      this.ui.showMoodSheet = false;
+      this.ui.tempMood = { emoji: '🙂', label: 'كويس', note: '' };
+      this.saveState();
+      this.showToast('✅ تم تسجيل المزاج');
+    },
+    pickMood(emoji, label) {
+      this.ui.tempMood.emoji = emoji;
+      this.ui.tempMood.label = label;
+    },
+    deleteSleepEntry(date) {
+      if (!confirm('احذف هذا التسجيل؟')) return;
+      delete this.health.sleepHistory[date];
+      this.saveState();
+    },
+    deleteMoodEntry(date) {
+      if (!confirm('احذف هذا التسجيل؟')) return;
+      delete this.health.moodHistory[date];
+      this.saveState();
+    },
+    get waterPct() {
+      const g = this.health.waterGoal || 8;
+      return Math.min(100, Math.round(((this.health.waterToday || 0) / g) * 100));
+    },
+    get avgSleep7Days() {
+      const days = [];
+      const now = new Date();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const k = d.toISOString().slice(0, 10);
+        if (this.health.sleepHistory[k]) days.push(this.health.sleepHistory[k].hours);
+      }
+      if (days.length === 0) return 0;
+      return (days.reduce((a, b) => a + b, 0) / days.length).toFixed(1);
+    },
+    get todayMood() {
+      const today = new Date().toISOString().slice(0, 10);
+      return this.health.moodHistory[today] || null;
+    },
+    get todaySleep() {
+      const today = new Date().toISOString().slice(0, 10);
+      return this.health.sleepHistory[today] || null;
+    },
+    get sleepHistoryList() {
+      return Object.entries(this.health.sleepHistory || {})
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .slice(0, 14)
+        .map(([date, v]) => ({ date, ...v }));
+    },
+    get moodHistoryList() {
+      return Object.entries(this.health.moodHistory || {})
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .slice(0, 14)
+        .map(([date, v]) => ({ date, ...v }));
+    },
+
+    // ═════════════════════════════════════════════
+    // v3.1 — UNIVERSAL SEARCH (search all data)
+    // ═════════════════════════════════════════════
+    get searchResults() {
+      const q = (this.ui.searchQuery || '').trim().toLowerCase();
+      if (!q || q.length < 2) return { expenses: [], tasks: [], goals: [], memos: [], lovedOnes: [], custom: [] };
+      const matches = (txt) => (txt || '').toLowerCase().includes(q);
+      return {
+        expenses: this.expenses.filter(e =>
+          matches(e.label) || matches(e.category) || matches(e.note) || String(e.amount).includes(q)
+        ).slice(0, 10),
+        tasks: this.tasks.filter(t => matches(t.text)).slice(0, 10),
+        goals: this.goals.filter(g => matches(g.title)).slice(0, 5),
+        memos: this.voiceMemosArchive.filter(m =>
+          matches(m.raw_text) || matches(m.summary)
+        ).slice(0, 10),
+        lovedOnes: this.lovedOnesProfiles.filter(p =>
+          matches(p.name) || matches(p.relationship) || matches(p.notes)
+        ).slice(0, 5),
+        custom: (this.customWidgets || []).filter(w =>
+          matches(w.name) || (w.items && w.items.some(i => matches(i.text)))
+        ).slice(0, 5),
+      };
+    },
+    get searchResultsCount() {
+      const r = this.searchResults;
+      return r.expenses.length + r.tasks.length + r.goals.length + r.memos.length + r.lovedOnes.length + r.custom.length;
+    },
+
+    // ═════════════════════════════════════════════
+    // v3.1 — STATISTICS & REPORTS
+    // ═════════════════════════════════════════════
+    get statsExpensesByCategory() {
+      const range = this.ui.statsRange;
+      const today = new Date();
+      let cutoff = new Date(today);
+      if (range === 'week') cutoff.setDate(cutoff.getDate() - 7);
+      else if (range === 'month') cutoff.setMonth(cutoff.getMonth() - 1);
+      else cutoff.setFullYear(cutoff.getFullYear() - 1);
+      const cutoffTime = cutoff.getTime();
+      const filtered = this.expenses.filter(e => (e.timestamp || new Date(e.date).getTime()) >= cutoffTime);
+      const totals = {};
+      filtered.forEach(e => {
+        const cat = e.category || 'أخرى';
+        totals[cat] = (totals[cat] || 0) + (Number(e.amount) || 0);
+      });
+      const total = Object.values(totals).reduce((s, v) => s + v, 0);
+      const colors = { 'أكل': '#FF9500', 'food': '#FF9500', 'تنقل': '#007AFF', 'transport': '#007AFF', 'بقالة': '#34C759', 'grocery': '#34C759', 'فواتير': '#FF3B30', 'bills': '#FF3B30', 'قهوة': '#8B4513', 'coffee': '#8B4513', 'ترفيه': '#AF52DE', 'fun': '#AF52DE', 'عائلة': '#FF2D55', 'family': '#FF2D55', 'تسوق': '#5856D6', 'shopping': '#5856D6', 'متفرقات': '#8E8E93', 'misc': '#8E8E93', 'أخرى': '#8E8E93' };
+      return Object.entries(totals)
+        .map(([cat, val]) => ({ cat, val, pct: total > 0 ? Math.round((val / total) * 100) : 0, color: colors[cat] || '#8E8E93' }))
+        .sort((a, b) => b.val - a.val);
+    },
+    get statsExpensesTotal() {
+      return this.statsExpensesByCategory.reduce((s, c) => s + c.val, 0);
+    },
+    get statsDaysSpending() {
+      const range = this.ui.statsRange;
+      const days = range === 'week' ? 7 : (range === 'month' ? 30 : 90);
+      const result = [];
+      const today = new Date(); today.setHours(0,0,0,0);
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        const total = this.expenses
+          .filter(e => e.date === key)
+          .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        result.push({ date: key, day: d.getDate(), total });
+      }
+      const max = Math.max(...result.map(r => r.total), 1);
+      return result.map(r => ({ ...r, height: Math.round((r.total / max) * 100) }));
+    },
+    get statsDevotionRate() {
+      const days = this.ui.statsRange === 'week' ? 7 : (this.ui.statsRange === 'month' ? 30 : 90);
+      const today = new Date(); today.setHours(0,0,0,0);
+      let done = 0;
+      let totalDays = 0;
+      for (let i = 0; i < days; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        const score = (this.dailyHistory[key] || {}).score || 0;
+        totalDays++;
+        if (score >= 30) done++;
+      }
+      return { done, totalDays, pct: totalDays > 0 ? Math.round((done / totalDays) * 100) : 0 };
+    },
+    get statsHabitsBreakdown() {
+      return this.habits.map(h => ({
+        name: h.ar,
+        current: h.value,
+        target: h.target,
+        streak: h.streak || 0,
+        pct: h.target > 0 ? Math.round((h.value / h.target) * 100) : 0,
+      }));
+    },
+    get statsTasksCompletion() {
+      const total = this.tasks.length;
+      const done = this.tasks.filter(t => t.done).length;
+      return { done, total, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
+    },
+    get statsPhotosPerMonth() {
+      const counts = {};
+      Object.keys(this.photoDay || {}).forEach(k => {
+        const month = k.slice(0, 7);
+        counts[month] = (counts[month] || 0) + 1;
+      });
+      const arr = Object.entries(counts)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .slice(-6)
+        .map(([m, c]) => ({ month: m, count: c }));
+      const max = Math.max(...arr.map(a => a.count), 1);
+      return arr.map(a => ({ ...a, height: Math.round((a.count / max) * 100) }));
+    },
+
+    // ═════════════════════════════════════════════
     // v2.7 — REFRESH ALL (manual sync trigger)
     // ═════════════════════════════════════════════
     async refreshAll() {
@@ -6478,6 +7646,9 @@ function app() {
         this.prayers.forEach(p => p.done = false);
         this.habits.forEach(h => { h.value = 0; });
         this.fridayChecks = {};
+        // v3.3 — Reset water counter
+        this.health.waterToday = 0;
+        this.health.waterLastDay = today;
         // Refresh prayer times for the new day
         if (typeof this.fetchPrayerTimes === 'function') {
           this.fetchPrayerTimes();
@@ -6516,6 +7687,8 @@ function app() {
           netWorth: this.netWorth,
           voiceMemosArchive: this.voiceMemosArchive,
           zakatNisab: this.zakatNisab,
+          hossoVisuals: this.hossoVisuals,
+          health: this.health,
         }));
         // v1.8 — Also push to cloud (debounced, skipped during remote apply)
         if (!this._applyingRemote && this._fbDoc) this.pushToFirestore();
@@ -6544,7 +7717,8 @@ function app() {
         // v2.9 — Cinematic redesign: hide widgets that are now in drawer unless user explicitly re-enables
         try {
           const drawerWidgets = ['heatmap', 'goals', 'netWorth', 'voiceMemos', 'hijriZakat',
-                                 'finance', 'expenses', 'monthSpend', 'recurring', 'watchlist', 'settings'];
+                                 'finance', 'expenses', 'monthSpend', 'recurring', 'watchlist', 'settings',
+                                 'hossoVisuals', 'health'];
           drawerWidgets.forEach(k => {
             if (this.widgets[k]) {
               const explicit = localStorage.getItem('hl_show_' + k);
@@ -6569,6 +7743,20 @@ function app() {
         if (s.netWorth) Object.assign(this.netWorth, s.netWorth);
         if (Array.isArray(s.voiceMemosArchive)) this.voiceMemosArchive = s.voiceMemosArchive;
         if (typeof s.zakatNisab === 'number') this.zakatNisab = s.zakatNisab;
+        // v3.2 — HOSSO Visuals
+        if (s.hossoVisuals) {
+          if (Array.isArray(s.hossoVisuals.clients)) this.hossoVisuals.clients = s.hossoVisuals.clients;
+          if (Array.isArray(s.hossoVisuals.projects)) this.hossoVisuals.projects = s.hossoVisuals.projects;
+          if (Array.isArray(s.hossoVisuals.services) && s.hossoVisuals.services.length > 0) this.hossoVisuals.services = s.hossoVisuals.services;
+        }
+        // v3.3 — Health
+        if (s.health) {
+          if (typeof s.health.waterToday === 'number') this.health.waterToday = s.health.waterToday;
+          if (typeof s.health.waterGoal === 'number') this.health.waterGoal = s.health.waterGoal;
+          if (s.health.waterLastDay) this.health.waterLastDay = s.health.waterLastDay;
+          if (s.health.sleepHistory) this.health.sleepHistory = s.health.sleepHistory;
+          if (s.health.moodHistory) this.health.moodHistory = s.health.moodHistory;
+        }
       } catch (e) { console.warn('Load failed:', e); }
     },
   };
