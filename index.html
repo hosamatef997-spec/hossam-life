@@ -2705,6 +2705,78 @@ body::before {
     </div>
     <!-- END voiceMemos wrap -->
 
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- v3.3 — HEALTH WIDGET (water · sleep · mood)             -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="widget-wrap" data-widget-key="health" :class="widgetClass('health')" x-show="widgets.health.visible || ui.editMode" :style="!widgets.health.visible && ui.editMode ? 'opacity: 0.4' : ''">
+      <div class="widget-controls">
+        <button class="widget-ctl size" @click="ui.sizePickerFor = ui.sizePickerFor === 'health' ? null : 'health'"><span x-text="widgets.health.size.toUpperCase()"></span></button>
+        <button class="widget-ctl delete" @click="toggleWidgetVisible('health')">×</button>
+      </div>
+      <div class="size-picker" x-show="ui.sizePickerFor === 'health'">
+        <button :class="{active: widgets.health.size === 'm'}" @click="setWidgetSize('health', 'm')">M</button>
+        <button :class="{active: widgets.health.size === 'l'}" @click="setWidgetSize('health', 'l')">L</button>
+        <button :class="{active: widgets.health.size === 'xl'}" @click="setWidgetSize('health', 'xl')">XL</button>
+      </div>
+      <div class="reorder-arrows">
+        <button class="reorder-arrow" :disabled="isFirstVisible('health')" @click="moveWidgetUp('health')" title="حرك فوق">↑</button>
+        <button class="reorder-arrow" :disabled="isLastVisible('health')" @click="moveWidgetDown('health')" title="حرك تحت">↓</button>
+      </div>
+      <div class="glass p-5 fade-up" style="height: 100%">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="row-icon" style="background: linear-gradient(135deg, #34C759, #00C7BE)">💚</div>
+            <div>
+              <p class="t-title3">الصحة</p>
+              <p class="t-footnote font-en" style="color: var(--ink-3)">Health Today</p>
+            </div>
+          </div>
+          <button class="btn btn-blue" style="padding: 6px 12px; font-size: 13px" @click="ui.showHealth = true">تفاصيل</button>
+        </div>
+
+        <!-- Water progress -->
+        <div class="p-4 rounded-2xl mb-3" style="background: linear-gradient(135deg, rgba(0,199,190,0.12), rgba(0,122,255,0.12))">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <p class="t-caption2" style="color: #00C7BE">💧 الماء · WATER</p>
+              <p class="font-en mt-1" style="font-size: 22px; font-weight: 800; letter-spacing: -0.5px">
+                <span x-text="health.waterToday || 0"></span>
+                <span style="font-size: 13px; color: var(--ink-3)"> / <span x-text="health.waterGoal"></span> كاسة</span>
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn" style="padding: 8px 12px; background: rgba(0,199,190,0.15); color: #00C7BE; font-weight: 700; font-size: 16px" @click="removeWater()" :disabled="!(health.waterToday > 0)">−</button>
+              <button class="btn" style="padding: 8px 14px; background: linear-gradient(135deg, #00C7BE, #007AFF); color: white; font-weight: 700; font-size: 16px" @click="addWater()">+</button>
+            </div>
+          </div>
+          <div style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden">
+            <div :style="`width: ${waterPct}%; height: 100%; background: linear-gradient(90deg, #00C7BE, #007AFF); border-radius: 99px; transition: width 0.3s`"></div>
+          </div>
+        </div>
+
+        <!-- Sleep + Mood row -->
+        <div class="grid grid-cols-2 gap-3">
+          <button @click="ui.tempSleep = todaySleep ? { hours: todaySleep.hours, quality: todaySleep.quality } : { hours: 7, quality: 'good' }; ui.showSleepSheet = true"
+                  class="p-3 rounded-2xl text-right" style="background: linear-gradient(135deg, rgba(88,86,214,0.12), rgba(175,82,222,0.12)); border: none; cursor: pointer">
+            <p class="t-caption2" style="color: #AF52DE">😴 النوم</p>
+            <p class="font-en mt-1" style="font-size: 18px; font-weight: 800">
+              <template x-if="todaySleep"><span><span x-text="todaySleep.hours"></span><span style="font-size: 11px; color: var(--ink-3)">سا</span></span></template>
+              <template x-if="!todaySleep"><span style="color: var(--ink-4); font-size: 14px">سجّل</span></template>
+            </p>
+          </button>
+          <button @click="ui.showMoodSheet = true"
+                  class="p-3 rounded-2xl text-right" style="background: linear-gradient(135deg, rgba(255,149,0,0.12), rgba(255,204,0,0.12)); border: none; cursor: pointer">
+            <p class="t-caption2" style="color: #FF9500">🎭 المزاج</p>
+            <p class="mt-1" style="font-size: 22px">
+              <template x-if="todayMood"><span x-text="todayMood.emoji"></span></template>
+              <template x-if="!todayMood"><span style="color: var(--ink-4); font-size: 14px">سجّل</span></template>
+            </p>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- END health wrap -->
+
     <!-- ─── CUSTOM WIDGETS (user-created) ─── -->
     <template x-for="cw in customWidgets" :key="cw.id">
       <div class="widget-wrap" :class="'w-size-' + (cw.size || 'm')" x-show="(cw.visible !== false) || ui.editMode" :style="((cw.visible === false) && ui.editMode ? 'opacity: 0.4; ' : '') + 'order: 100'">
@@ -2893,7 +2965,7 @@ body::before {
 
   <!-- Footer -->
   <p class="text-center mt-8 t-caption2" style="color: var(--ink-4); padding-bottom: env(safe-area-inset-bottom, 0px)">
-    حسام ليف · Hossam Life · v3.2
+    حسام ليف · Hossam Life · v3.3 — Health Tracker
   </p>
 
 </div>
@@ -3207,6 +3279,218 @@ body::before {
 
       <div style="text-align: center; padding: 30px 0; opacity: 0.4; font-size: 11px">
         HOSSO Visuals · Hossam Life v3.2
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- v3.3 — HEALTH FULL PAGE (water · sleep · mood)          -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<template x-if="ui.showHealth">
+  <div style="position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #0a1410 0%, #0f1d18 100%); color: #EEE7D9; overflow-y: auto; -webkit-overflow-scrolling: touch; animation: pageSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)">
+    <!-- Sticky header -->
+    <div style="position: sticky; top: 0; z-index: 10; background: rgba(10,20,16,0.92); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 0.5px solid rgba(52,199,89,0.25); padding: 12px 16px">
+      <div class="flex items-center justify-between" style="max-width: 700px; margin: 0 auto">
+        <button @click="ui.showHealth = false" style="display: flex; align-items: center; gap: 4px; background: transparent; border: none; color: #EEE7D9; cursor: pointer; padding: 6px 10px; font-size: 14px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          رجوع
+        </button>
+        <p class="t-headline" style="margin: 0; color: #EEE7D9">💚 الصحة</p>
+        <div style="width: 60px"></div>
+      </div>
+    </div>
+
+    <div style="max-width: 700px; margin: 0 auto; padding: 16px">
+      <!-- WATER HERO -->
+      <div style="background: linear-gradient(135deg, rgba(0,199,190,0.18), rgba(0,122,255,0.08)); border: 1px solid rgba(0,199,190,0.3); border-radius: 20px; padding: 20px; margin-bottom: 16px">
+        <p style="font-size: 11px; letter-spacing: 1px; color: #00C7BE; text-transform: uppercase">💧 الماء اليوم</p>
+        <p style="font-size: 44px; font-weight: 800; letter-spacing: -1px; margin-top: 6px">
+          <span x-text="health.waterToday || 0"></span>
+          <span style="font-size: 18px; color: var(--ink-3)"> / <span x-text="health.waterGoal"></span></span>
+        </p>
+        <div style="height: 12px; background: rgba(0,0,0,0.3); border-radius: 99px; overflow: hidden; margin-top: 12px">
+          <div :style="`width: ${waterPct}%; height: 100%; background: linear-gradient(90deg, #00C7BE, #007AFF); border-radius: 99px; transition: width 0.4s ease-out`"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px">
+          <button @click="removeWater()" :disabled="!(health.waterToday > 0)" style="padding: 14px; background: rgba(0,199,190,0.12); color: #00C7BE; border: 1px solid rgba(0,199,190,0.25); border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 16px">−</button>
+          <button @click="addWater()" style="padding: 14px; background: linear-gradient(135deg, #00C7BE, #007AFF); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 16px">+</button>
+        </div>
+        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 10px">
+          <p style="font-size: 12px; opacity: 0.7">الهدف اليومي</p>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <button @click="health.waterGoal = Math.max(1, health.waterGoal - 1); saveState()" style="background: transparent; color: #00C7BE; border: 1px solid rgba(0,199,190,0.3); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: 700">−</button>
+            <span style="font-weight: 700; min-width: 30px; text-align: center" x-text="health.waterGoal"></span>
+            <button @click="health.waterGoal = Math.min(20, health.waterGoal + 1); saveState()" style="background: transparent; color: #00C7BE; border: 1px solid rgba(0,199,190,0.3); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: 700">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLEEP + MOOD ROW -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px">
+        <!-- Sleep card -->
+        <button @click="ui.tempSleep = todaySleep ? { hours: todaySleep.hours, quality: todaySleep.quality } : { hours: 7, quality: 'good' }; ui.showSleepSheet = true"
+                style="background: linear-gradient(135deg, rgba(88,86,214,0.15), rgba(175,82,222,0.08)); border: 1px solid rgba(175,82,222,0.3); border-radius: 16px; padding: 14px; cursor: pointer; text-align: right; color: #EEE7D9">
+          <p style="font-size: 11px; letter-spacing: 1px; color: #AF52DE; text-transform: uppercase">😴 النوم</p>
+          <template x-if="todaySleep">
+            <div>
+              <p style="font-size: 28px; font-weight: 800; margin-top: 4px">
+                <span x-text="todaySleep.hours"></span><span style="font-size: 13px; color: var(--ink-3)">سا</span>
+              </p>
+              <p style="font-size: 11px; opacity: 0.7; margin-top: 2px" x-text="todaySleep.quality === 'great' ? 'ممتاز' : todaySleep.quality === 'good' ? 'كويس' : todaySleep.quality === 'okay' ? 'وسط' : 'تعبان'"></p>
+            </div>
+          </template>
+          <template x-if="!todaySleep">
+            <p style="margin-top: 12px; opacity: 0.6; font-size: 13px">اضغط للتسجيل</p>
+          </template>
+          <p style="font-size: 10px; margin-top: 8px; opacity: 0.5">المتوسط 7 أيام: <span x-text="avgSleep7Days"></span>سا</p>
+        </button>
+
+        <!-- Mood card -->
+        <button @click="ui.showMoodSheet = true"
+                style="background: linear-gradient(135deg, rgba(255,149,0,0.15), rgba(255,204,0,0.08)); border: 1px solid rgba(255,149,0,0.3); border-radius: 16px; padding: 14px; cursor: pointer; text-align: right; color: #EEE7D9">
+          <p style="font-size: 11px; letter-spacing: 1px; color: #FF9500; text-transform: uppercase">🎭 المزاج</p>
+          <template x-if="todayMood">
+            <div>
+              <p style="font-size: 38px; margin-top: 4px" x-text="todayMood.emoji"></p>
+              <p style="font-size: 11px; opacity: 0.7" x-text="todayMood.label"></p>
+            </div>
+          </template>
+          <template x-if="!todayMood">
+            <p style="margin-top: 12px; opacity: 0.6; font-size: 13px">اضغط للتسجيل</p>
+          </template>
+        </button>
+      </div>
+
+      <!-- SLEEP HISTORY -->
+      <div x-show="sleepHistoryList.length > 0" style="margin-bottom: 18px">
+        <p style="font-size: 11px; letter-spacing: 1px; color: #AF52DE; text-transform: uppercase; margin-bottom: 10px">📊 سجل النوم</p>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <template x-for="s in sleepHistoryList" :key="s.date">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(175,82,222,0.08); border-radius: 10px">
+              <div style="display: flex; align-items: center; gap: 10px">
+                <span style="font-size: 18px">😴</span>
+                <div>
+                  <p style="font-size: 13px; font-weight: 600" x-text="s.date"></p>
+                  <p style="font-size: 10px; opacity: 0.6" x-text="s.quality === 'great' ? 'ممتاز' : s.quality === 'good' ? 'كويس' : s.quality === 'okay' ? 'وسط' : 'تعبان'"></p>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <p style="font-size: 16px; font-weight: 800; color: #AF52DE" x-text="s.hours + 'سا'"></p>
+                <button @click="deleteSleepEntry(s.date)" style="background: rgba(255,59,48,0.15); color: #FF6B6B; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer">🗑</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- MOOD HISTORY -->
+      <div x-show="moodHistoryList.length > 0" style="margin-bottom: 18px">
+        <p style="font-size: 11px; letter-spacing: 1px; color: #FF9500; text-transform: uppercase; margin-bottom: 10px">🎭 سجل المزاج</p>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <template x-for="m in moodHistoryList" :key="m.date">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(255,149,0,0.08); border-radius: 10px">
+              <div style="display: flex; align-items: center; gap: 10px">
+                <span style="font-size: 26px" x-text="m.emoji"></span>
+                <div>
+                  <p style="font-size: 13px; font-weight: 600" x-text="m.label"></p>
+                  <p style="font-size: 10px; opacity: 0.6" x-text="m.date"></p>
+                  <p x-show="m.note" style="font-size: 11px; opacity: 0.7; margin-top: 2px" x-text="m.note"></p>
+                </div>
+              </div>
+              <button @click="deleteMoodEntry(m.date)" style="background: rgba(255,59,48,0.15); color: #FF6B6B; border: none; padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer">🗑</button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div x-show="sleepHistoryList.length === 0 && moodHistoryList.length === 0" style="text-align: center; padding: 30px 20px; opacity: 0.6">
+        <p style="font-size: 40px">💚</p>
+        <p style="margin-top: 10px; font-size: 13px">ابدأ تسجيل نومك ومزاجك يومياً</p>
+      </div>
+
+      <div style="text-align: center; padding: 30px 0; opacity: 0.4; font-size: 11px">
+        Health · Hossam Life v3.3
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- v3.3 — Sleep Entry Sheet -->
+<template x-if="ui.showSleepSheet">
+  <div>
+    <div class="sheet-backdrop" @click="ui.showSleepSheet = false" style="z-index: 1500"></div>
+    <div class="sheet p-5" style="max-width: 500px; margin: 0 auto; right: 0; left: 0; z-index: 1510">
+      <div class="sheet-handle"></div>
+      <div class="flex items-center justify-between mb-5 mt-2">
+        <button class="btn btn-plain" @click="ui.showSleepSheet = false">إلغاء</button>
+        <p class="t-headline">😴 تسجيل النوم</p>
+        <button class="btn btn-plain" @click="saveSleep()" style="font-weight: 700">حفظ</button>
+      </div>
+      <div class="space-y-4">
+        <!-- Hours selector -->
+        <div>
+          <p class="t-caption2 mb-2">عدد الساعات</p>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 14px; padding: 16px; background: rgba(175,82,222,0.08); border-radius: 14px">
+            <button @click="ui.tempSleep.hours = Math.max(0, ui.tempSleep.hours - 0.5)" style="background: rgba(175,82,222,0.2); color: #AF52DE; border: none; width: 44px; height: 44px; border-radius: 10px; cursor: pointer; font-size: 22px; font-weight: 700">−</button>
+            <div style="text-align: center; min-width: 100px">
+              <p style="font-size: 42px; font-weight: 800; color: #AF52DE; letter-spacing: -1px" x-text="ui.tempSleep.hours"></p>
+              <p style="font-size: 11px; opacity: 0.7">ساعة</p>
+            </div>
+            <button @click="ui.tempSleep.hours = Math.min(14, ui.tempSleep.hours + 0.5)" style="background: rgba(175,82,222,0.2); color: #AF52DE; border: none; width: 44px; height: 44px; border-radius: 10px; cursor: pointer; font-size: 22px; font-weight: 700">+</button>
+          </div>
+        </div>
+        <!-- Quality -->
+        <div>
+          <p class="t-caption2 mb-2">جودة النوم</p>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px">
+            <template x-for="q in [{v:'great',l:'ممتاز',e:'🌟'},{v:'good',l:'كويس',e:'😊'},{v:'okay',l:'وسط',e:'😐'},{v:'bad',l:'تعبان',e:'😩'}]" :key="q.v">
+              <button @click="ui.tempSleep.quality = q.v"
+                      :style="ui.tempSleep.quality === q.v ? 'background: linear-gradient(135deg, #AF52DE, #5856D6); color: white; border: none' : 'background: rgba(175,82,222,0.08); color: var(--ink-1); border: 1px solid rgba(175,82,222,0.2)'"
+                      style="padding: 10px 4px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600">
+                <div style="font-size: 22px" x-text="q.e"></div>
+                <div x-text="q.l" style="margin-top: 2px"></div>
+              </button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- v3.3 — Mood Entry Sheet -->
+<template x-if="ui.showMoodSheet">
+  <div>
+    <div class="sheet-backdrop" @click="ui.showMoodSheet = false" style="z-index: 1500"></div>
+    <div class="sheet p-5" style="max-width: 500px; margin: 0 auto; right: 0; left: 0; z-index: 1510">
+      <div class="sheet-handle"></div>
+      <div class="flex items-center justify-between mb-5 mt-2">
+        <button class="btn btn-plain" @click="ui.showMoodSheet = false">إلغاء</button>
+        <p class="t-headline">🎭 تسجيل المزاج</p>
+        <button class="btn btn-plain" @click="saveMood()" style="font-weight: 700">حفظ</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <p class="t-caption2 mb-2">إزيك دلوقتي؟</p>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px">
+            <template x-for="m in [
+              {e:'🤩',l:'رائع'},{e:'😊',l:'كويس'},{e:'🙂',l:'عادي'},{e:'😐',l:'محايد'},
+              {e:'😴',l:'تعبان'},{e:'😔',l:'حزين'},{e:'😰',l:'قلقان'},{e:'😡',l:'متضايق'}
+            ]" :key="m.e">
+              <button @click="pickMood(m.e, m.l)"
+                      :style="ui.tempMood.emoji === m.e ? 'background: linear-gradient(135deg, #FF9500, #FFCC00); border: none; transform: scale(1.05)' : 'background: rgba(255,149,0,0.08); border: 1px solid rgba(255,149,0,0.2)'"
+                      style="padding: 12px 4px; border-radius: 12px; cursor: pointer; transition: 0.15s; color: var(--ink-1)">
+                <div style="font-size: 30px" x-text="m.e"></div>
+                <div style="font-size: 10px; margin-top: 4px; font-weight: 600" x-text="m.l"></div>
+              </button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">ملاحظة (اختياري)</p>
+          <textarea class="input" x-model="ui.tempMood.note" rows="2" placeholder="ايه اللي خلاك حاسس كده؟" style="resize: vertical"></textarea>
+        </div>
       </div>
     </div>
   </div>
@@ -3611,6 +3895,21 @@ body::before {
           <span class="drawer-item-icon" style="background: linear-gradient(135deg, #2A1F12, #B08F3A); color: #EEE7D9">📸</span>
           <span class="drawer-item-label">شغل التصوير</span>
           <span class="t-caption2 font-en" style="color: var(--ink-3)" x-text="hossoActiveProjects + ' نشطة'"></span>
+        </button>
+      </div>
+
+      <!-- Section: الصحة -->
+      <div class="drawer-section">
+        <p class="drawer-section-title">💚 الصحة والعافية</p>
+        <button class="drawer-item" @click="ui.showDrawer = false; ui.showHealth = true">
+          <span class="drawer-item-icon" style="background: linear-gradient(135deg, #34C759, #00C7BE)">💚</span>
+          <span class="drawer-item-label">الصحة · ماء · نوم · مزاج</span>
+          <span class="t-caption2 font-en" style="color: var(--ink-3)" x-text="(health.waterToday || 0) + '/' + health.waterGoal + ' 💧'"></span>
+        </button>
+        <button class="drawer-item" @click="widgets.health.visible = true; localStorage.setItem('hl_show_health','1'); ui.showDrawer = false">
+          <span class="drawer-item-icon" style="background: rgba(52,199,89,0.15); color: #34C759">📌</span>
+          <span class="drawer-item-label">عرض الصحة على الصفحة الرئيسية</span>
+          <svg class="drawer-item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1)"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
 
@@ -4501,6 +4800,12 @@ function app() {
       showHossoNewClient: false,
       newProject: { clientName: '', title: '', date: '', amount: 0, type: 'صورة', notes: '' },
       newClient: { name: '', phone: '', email: '', notes: '' },
+      // v3.3 — Health
+      showHealth: false,
+      showSleepSheet: false,
+      showMoodSheet: false,
+      tempSleep: { hours: 7, quality: 'good' },
+      tempMood: { emoji: '🙂', label: 'كويس', note: '' },
       showCreateCustom: false,
       editMode: false,
       sizePickerFor: null,
@@ -4567,6 +4872,10 @@ function app() {
       netWorth:     { size: 'l',  visible: false, order: 16, section: 'main', ar: 'صافي الثروة',    en: 'Net Worth' },
       voiceMemos:   { size: 'l',  visible: false, order: 17, section: 'main', ar: 'ميمو صوتي',      en: 'Voice Memos' },
       hijriZakat:   { size: 'm',  visible: false, order: 4,  section: 'left', ar: 'هجري · زكاة',    en: 'Hijri & Zakat' },
+      // ─── v3.2 HOSSO Visuals ───
+      hossoVisuals: { size: 'l',  visible: false, order: 18, section: 'main', ar: 'HOSSO Visuals', en: 'HOSSO Visuals' },
+      // ─── v3.3 HEALTH ───
+      health:       { size: 'l',  visible: false, order: 19, section: 'main', ar: 'الصحة',          en: 'Health' },
     },
 
     // v2.6 — Phase 3 state
@@ -4584,6 +4893,15 @@ function app() {
     },
     voiceMemosArchive: [],
     zakatNisab: 9000, // AED — approximate equivalent of 85g gold
+
+    // v3.3 — Health tracker
+    health: {
+      waterToday: 0,
+      waterGoal: 8,
+      waterLastDay: '',
+      sleepHistory: {},  // { 'YYYY-MM-DD': { hours, quality } }
+      moodHistory: {},   // { 'YYYY-MM-DD': { emoji, label, note, ts } }
+    },
 
     // v3.2 — HOSSO Visuals business module
     hossoVisuals: {
@@ -6776,6 +7094,102 @@ function app() {
     },
 
     // ═════════════════════════════════════════════
+    // v3.3 — HEALTH TRACKER (water · sleep · mood)
+    // ═════════════════════════════════════════════
+    addWater() {
+      // Safety: rollover check
+      const today = new Date().toISOString().slice(0, 10);
+      if (this.health.waterLastDay && this.health.waterLastDay !== today) {
+        this.health.waterToday = 0;
+      }
+      this.health.waterToday = (this.health.waterToday || 0) + 1;
+      this.health.waterLastDay = today;
+      if (this.health.waterToday === this.health.waterGoal) {
+        this.showToast('💧 ممتاز! وصلت لهدف اليوم');
+      }
+      this.saveState();
+    },
+    removeWater() {
+      this.health.waterToday = Math.max(0, (this.health.waterToday || 0) - 1);
+      this.saveState();
+    },
+    saveSleep() {
+      const today = new Date().toISOString().slice(0, 10);
+      const hrs = Math.max(0, Math.min(14, Number(this.ui.tempSleep.hours) || 7));
+      this.health.sleepHistory[today] = {
+        hours: hrs,
+        quality: this.ui.tempSleep.quality || 'good',
+        ts: Date.now(),
+      };
+      this.ui.showSleepSheet = false;
+      this.saveState();
+      this.showToast('😴 تم تسجيل النوم');
+    },
+    saveMood() {
+      const today = new Date().toISOString().slice(0, 10);
+      this.health.moodHistory[today] = {
+        emoji: this.ui.tempMood.emoji || '🙂',
+        label: this.ui.tempMood.label || '',
+        note: (this.ui.tempMood.note || '').trim(),
+        ts: Date.now(),
+      };
+      this.ui.showMoodSheet = false;
+      this.ui.tempMood = { emoji: '🙂', label: 'كويس', note: '' };
+      this.saveState();
+      this.showToast('✅ تم تسجيل المزاج');
+    },
+    pickMood(emoji, label) {
+      this.ui.tempMood.emoji = emoji;
+      this.ui.tempMood.label = label;
+    },
+    deleteSleepEntry(date) {
+      if (!confirm('احذف هذا التسجيل؟')) return;
+      delete this.health.sleepHistory[date];
+      this.saveState();
+    },
+    deleteMoodEntry(date) {
+      if (!confirm('احذف هذا التسجيل؟')) return;
+      delete this.health.moodHistory[date];
+      this.saveState();
+    },
+    get waterPct() {
+      const g = this.health.waterGoal || 8;
+      return Math.min(100, Math.round(((this.health.waterToday || 0) / g) * 100));
+    },
+    get avgSleep7Days() {
+      const days = [];
+      const now = new Date();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const k = d.toISOString().slice(0, 10);
+        if (this.health.sleepHistory[k]) days.push(this.health.sleepHistory[k].hours);
+      }
+      if (days.length === 0) return 0;
+      return (days.reduce((a, b) => a + b, 0) / days.length).toFixed(1);
+    },
+    get todayMood() {
+      const today = new Date().toISOString().slice(0, 10);
+      return this.health.moodHistory[today] || null;
+    },
+    get todaySleep() {
+      const today = new Date().toISOString().slice(0, 10);
+      return this.health.sleepHistory[today] || null;
+    },
+    get sleepHistoryList() {
+      return Object.entries(this.health.sleepHistory || {})
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .slice(0, 14)
+        .map(([date, v]) => ({ date, ...v }));
+    },
+    get moodHistoryList() {
+      return Object.entries(this.health.moodHistory || {})
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .slice(0, 14)
+        .map(([date, v]) => ({ date, ...v }));
+    },
+
+    // ═════════════════════════════════════════════
     // v3.1 — UNIVERSAL SEARCH (search all data)
     // ═════════════════════════════════════════════
     get searchResults() {
@@ -7232,6 +7646,9 @@ function app() {
         this.prayers.forEach(p => p.done = false);
         this.habits.forEach(h => { h.value = 0; });
         this.fridayChecks = {};
+        // v3.3 — Reset water counter
+        this.health.waterToday = 0;
+        this.health.waterLastDay = today;
         // Refresh prayer times for the new day
         if (typeof this.fetchPrayerTimes === 'function') {
           this.fetchPrayerTimes();
@@ -7271,6 +7688,7 @@ function app() {
           voiceMemosArchive: this.voiceMemosArchive,
           zakatNisab: this.zakatNisab,
           hossoVisuals: this.hossoVisuals,
+          health: this.health,
         }));
         // v1.8 — Also push to cloud (debounced, skipped during remote apply)
         if (!this._applyingRemote && this._fbDoc) this.pushToFirestore();
@@ -7299,7 +7717,8 @@ function app() {
         // v2.9 — Cinematic redesign: hide widgets that are now in drawer unless user explicitly re-enables
         try {
           const drawerWidgets = ['heatmap', 'goals', 'netWorth', 'voiceMemos', 'hijriZakat',
-                                 'finance', 'expenses', 'monthSpend', 'recurring', 'watchlist', 'settings'];
+                                 'finance', 'expenses', 'monthSpend', 'recurring', 'watchlist', 'settings',
+                                 'hossoVisuals', 'health'];
           drawerWidgets.forEach(k => {
             if (this.widgets[k]) {
               const explicit = localStorage.getItem('hl_show_' + k);
@@ -7329,6 +7748,14 @@ function app() {
           if (Array.isArray(s.hossoVisuals.clients)) this.hossoVisuals.clients = s.hossoVisuals.clients;
           if (Array.isArray(s.hossoVisuals.projects)) this.hossoVisuals.projects = s.hossoVisuals.projects;
           if (Array.isArray(s.hossoVisuals.services) && s.hossoVisuals.services.length > 0) this.hossoVisuals.services = s.hossoVisuals.services;
+        }
+        // v3.3 — Health
+        if (s.health) {
+          if (typeof s.health.waterToday === 'number') this.health.waterToday = s.health.waterToday;
+          if (typeof s.health.waterGoal === 'number') this.health.waterGoal = s.health.waterGoal;
+          if (s.health.waterLastDay) this.health.waterLastDay = s.health.waterLastDay;
+          if (s.health.sleepHistory) this.health.sleepHistory = s.health.sleepHistory;
+          if (s.health.moodHistory) this.health.moodHistory = s.health.moodHistory;
         }
       } catch (e) { console.warn('Load failed:', e); }
     },
