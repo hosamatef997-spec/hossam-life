@@ -1001,6 +1001,12 @@ body::before {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* v3.4 — AI Coach typing pulse */
+@keyframes pulse {
+  0%, 60%, 100% { transform: scale(1); opacity: 0.4; }
+  30% { transform: scale(1.4); opacity: 1; }
+}
+
 /* v2.6.1 — Mobile responsive overrides for Phase 3 widgets */
 @media (max-width: 640px) {
   /* Heatmap: smaller cells so it fits better */
@@ -2965,7 +2971,7 @@ body::before {
 
   <!-- Footer -->
   <p class="text-center mt-8 t-caption2" style="color: var(--ink-4); padding-bottom: env(safe-area-inset-bottom, 0px)">
-    حسام ليف · Hossam Life · v3.3 — Health Tracker
+    حسام ليف · Hossam Life · v3.4 — AI Coach · Vision · Audio
   </p>
 
 </div>
@@ -3496,6 +3502,261 @@ body::before {
   </div>
 </template>
 
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- v3.4 — AI LIFE COACH (Chat with Claude — full page)     -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<template x-if="ui.showCoach">
+  <div style="position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #0a0e1a 0%, #0f1729 100%); color: #EEE7D9; display: flex; flex-direction: column; animation: pageSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)">
+    <!-- Header -->
+    <div style="background: rgba(10,14,26,0.92); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 0.5px solid rgba(122,90,248,0.25); padding: 12px 16px; flex-shrink: 0">
+      <div class="flex items-center justify-between" style="max-width: 700px; margin: 0 auto">
+        <button @click="ui.showCoach = false" style="background: transparent; border: none; color: #EEE7D9; cursor: pointer; padding: 6px 10px; font-size: 14px; display: flex; align-items: center; gap: 4px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          رجوع
+        </button>
+        <p class="t-headline" style="margin: 0; color: #EEE7D9">🧠 AI Life Coach</p>
+        <button @click="clearCoachChat()" style="background: rgba(255,59,48,0.15); color: #FF6B6B; border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 11px">مسح</button>
+      </div>
+    </div>
+
+    <!-- Messages area -->
+    <div id="coach-messages" style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px">
+      <div style="max-width: 700px; margin: 0 auto">
+        <!-- Empty state -->
+        <div x-show="coach.messages.length === 0" style="text-align: center; padding: 40px 20px; opacity: 0.7">
+          <p style="font-size: 50px">🧠</p>
+          <p style="font-size: 16px; font-weight: 700; margin-top: 10px">أهلاً يا حسام</p>
+          <p style="font-size: 13px; opacity: 0.7; margin-top: 6px; line-height: 1.6">
+            أنا Claude — مدرب حياتك الشخصي. عارف كل بياناتك (مالية، صحة، عبادة، شغل التصوير).<br>
+            اسألني أي حاجة.
+          </p>
+          <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 8px">
+            <button @click="ui.coachDraft = 'كيف كان أدائي الأسبوع ده؟'; sendCoachMessage()" style="background: rgba(122,90,248,0.12); color: #BB9DFF; border: 1px solid rgba(122,90,248,0.3); padding: 10px 14px; border-radius: 12px; cursor: pointer; font-size: 13px; text-align: right">💡 كيف كان أدائي الأسبوع ده؟</button>
+            <button @click="ui.coachDraft = 'اقترح عليّ خطة لليوم بناءً على ظروفي'; sendCoachMessage()" style="background: rgba(122,90,248,0.12); color: #BB9DFF; border: 1px solid rgba(122,90,248,0.3); padding: 10px 14px; border-radius: 12px; cursor: pointer; font-size: 13px; text-align: right">📋 اقترح خطة لليوم</button>
+            <button @click="ui.coachDraft = 'إيه أكتر حاجة محتاج أركز عليها دلوقتي؟'; sendCoachMessage()" style="background: rgba(122,90,248,0.12); color: #BB9DFF; border: 1px solid rgba(122,90,248,0.3); padding: 10px 14px; border-radius: 12px; cursor: pointer; font-size: 13px; text-align: right">🎯 إيه أكتر حاجة محتاج أركز عليها؟</button>
+            <button @click="ui.coachDraft = 'حلل صرفي وقولي إيه اللي عايز يتظبط'; sendCoachMessage()" style="background: rgba(122,90,248,0.12); color: #BB9DFF; border: 1px solid rgba(122,90,248,0.3); padding: 10px 14px; border-radius: 12px; cursor: pointer; font-size: 13px; text-align: right">💰 حلل صرفي</button>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <template x-for="(msg, i) in coach.messages" :key="i">
+          <div :style="msg.role === 'user' ? 'display: flex; justify-content: flex-end' : 'display: flex; justify-content: flex-start'" style="margin-bottom: 10px">
+            <div :style="msg.role === 'user' ? 'background: linear-gradient(135deg, #7A5AF8, #5856D6); color: white; max-width: 80%; padding: 10px 14px; border-radius: 16px 16px 4px 16px' : 'background: rgba(238,231,217,0.08); color: #EEE7D9; max-width: 85%; padding: 10px 14px; border-radius: 16px 16px 16px 4px; border: 0.5px solid rgba(238,231,217,0.12)'">
+              <p style="font-size: 14px; line-height: 1.7; white-space: pre-wrap" x-text="msg.text"></p>
+              <p style="font-size: 10px; opacity: 0.5; margin-top: 4px" x-text="new Date(msg.ts).toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'})"></p>
+            </div>
+          </div>
+        </template>
+
+        <!-- Typing indicator -->
+        <div x-show="ui.coachSending" style="display: flex; justify-content: flex-start; margin-bottom: 10px">
+          <div style="background: rgba(238,231,217,0.08); padding: 12px 16px; border-radius: 16px 16px 16px 4px; display: flex; gap: 4px">
+            <span style="width: 6px; height: 6px; background: #BB9DFF; border-radius: 50%; animation: pulse 1.4s infinite"></span>
+            <span style="width: 6px; height: 6px; background: #BB9DFF; border-radius: 50%; animation: pulse 1.4s infinite 0.2s"></span>
+            <span style="width: 6px; height: 6px; background: #BB9DFF; border-radius: 50%; animation: pulse 1.4s infinite 0.4s"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input bar -->
+    <div style="flex-shrink: 0; padding: 12px 16px; background: rgba(10,14,26,0.92); backdrop-filter: blur(20px); border-top: 0.5px solid rgba(122,90,248,0.25); padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px))">
+      <div class="flex items-center gap-2" style="max-width: 700px; margin: 0 auto">
+        <input type="text" x-model="ui.coachDraft" @keydown.enter="sendCoachMessage()"
+               :disabled="ui.coachSending"
+               placeholder="اسأل أي حاجة..."
+               style="flex: 1; background: rgba(238,231,217,0.08); border: 1px solid rgba(122,90,248,0.25); color: #EEE7D9; padding: 12px 14px; border-radius: 14px; font-size: 14px; outline: none">
+        <button @click="sendCoachMessage()" :disabled="ui.coachSending || !ui.coachDraft.trim()"
+                style="background: linear-gradient(135deg, #7A5AF8, #5856D6); color: white; border: none; width: 46px; height: 46px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px"
+                :style="(ui.coachSending || !ui.coachDraft.trim()) ? 'opacity: 0.4' : ''">↑</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- v3.4 — VISION BOARD (manifest your dreams)               -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<template x-if="ui.showVisionBoard">
+  <div style="position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #1a0f1a 0%, #2a1a2f 100%); color: #EEE7D9; overflow-y: auto; -webkit-overflow-scrolling: touch; animation: pageSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)">
+    <!-- Header -->
+    <div style="position: sticky; top: 0; z-index: 10; background: rgba(26,15,26,0.92); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 0.5px solid rgba(255,149,0,0.25); padding: 12px 16px">
+      <div class="flex items-center justify-between" style="max-width: 700px; margin: 0 auto">
+        <button @click="ui.showVisionBoard = false" style="display: flex; align-items: center; gap: 4px; background: transparent; border: none; color: #EEE7D9; cursor: pointer; padding: 6px 10px; font-size: 14px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          رجوع
+        </button>
+        <p class="t-headline" style="margin: 0; color: #EEE7D9">✨ Vision Board</p>
+        <div style="width: 60px"></div>
+      </div>
+    </div>
+
+    <div style="max-width: 700px; margin: 0 auto; padding: 16px">
+      <!-- Hero stats -->
+      <div style="background: linear-gradient(135deg, rgba(255,149,0,0.18), rgba(176,143,58,0.08)); border: 1px solid rgba(255,149,0,0.3); border-radius: 20px; padding: 20px; margin-bottom: 16px; text-align: center">
+        <p style="font-size: 11px; letter-spacing: 2px; color: #FF9500; text-transform: uppercase">أحلامك بصورة</p>
+        <p style="font-size: 32px; font-weight: 800; margin-top: 8px">
+          <span x-text="visionStats.active"></span>
+          <span style="font-size: 14px; color: var(--ink-3); font-weight: 500"> حلم نشط</span>
+        </p>
+        <p x-show="visionStats.achieved > 0" style="font-size: 12px; opacity: 0.7; margin-top: 4px">
+          🎉 <span x-text="visionStats.achieved"></span> تحقق
+        </p>
+      </div>
+
+      <button @click="ui.showVisionNew = true" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #FF9500, #FFCC00); color: #1a0f1a; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; margin-bottom: 16px; font-size: 14px">+ أضف حلم جديد</button>
+
+      <!-- Empty state -->
+      <div x-show="visionBoard.items.length === 0" style="text-align: center; padding: 50px 20px; opacity: 0.6">
+        <p style="font-size: 60px">✨</p>
+        <p style="margin-top: 14px; font-size: 14px">ابدأ بإضافة أول حلم</p>
+        <p style="font-size: 12px; opacity: 0.7; margin-top: 6px; line-height: 1.6">صور + هدف + تاريخ مستهدف<br>افتح كل صبح وفكر ليه بتشتغل</p>
+      </div>
+
+      <!-- Vision items grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px">
+        <template x-for="v in visionBoard.items" :key="v.id">
+          <div :style="`background: linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.7)), ${v.imageUrl ? 'url(' + v.imageUrl + ')' : v.color}; background-size: cover; background-position: center; border-radius: 16px; padding: 14px; min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; position: relative; border: 1px solid ${v.color}40; overflow: hidden`">
+            <!-- Achieved badge -->
+            <div x-show="v.status === 'achieved'" style="position: absolute; top: 10px; left: 10px; background: rgba(52,199,89,0.95); color: white; padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 700; letter-spacing: 1px">✓ تحقق</div>
+
+            <!-- Top: target date -->
+            <div x-show="v.targetDate" style="text-align: end">
+              <p style="font-size: 10px; color: rgba(255,255,255,0.85); background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 6px; display: inline-block">
+                <template x-if="visionDaysLeft(v.targetDate) > 0">
+                  <span><span x-text="visionDaysLeft(v.targetDate)"></span> يوم متبقي</span>
+                </template>
+                <template x-if="visionDaysLeft(v.targetDate) <= 0 && v.status !== 'achieved'">
+                  <span style="color: #FF6B6B">⏰ مر التاريخ</span>
+                </template>
+              </p>
+            </div>
+
+            <!-- Bottom: title + actions -->
+            <div>
+              <p style="font-size: 16px; font-weight: 800; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.6); margin-bottom: 4px" x-text="v.title"></p>
+              <p x-show="v.description" style="font-size: 11px; color: rgba(255,255,255,0.85); margin-bottom: 8px; line-height: 1.5" x-text="v.description"></p>
+              <div style="display: flex; gap: 6px">
+                <button @click="toggleVisionAchieved(v.id)" :style="v.status === 'achieved' ? 'background: rgba(255,255,255,0.2); color: white' : 'background: rgba(52,199,89,0.85); color: white'" style="border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 10px; font-weight: 700; flex: 1" x-text="v.status === 'achieved' ? '↩ نشط' : '✓ تحقق'"></button>
+                <button @click="deleteVisionItem(v.id)" style="background: rgba(255,59,48,0.85); color: white; border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 10px">🗑</button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div style="text-align: center; padding: 30px 0; opacity: 0.4; font-size: 11px">
+        Vision Board · Hossam Life v3.4
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- v3.4 — New Vision Sheet -->
+<template x-if="ui.showVisionNew">
+  <div>
+    <div class="sheet-backdrop" @click="ui.showVisionNew = false" style="z-index: 1500"></div>
+    <div class="sheet p-5" style="max-width: 500px; margin: 0 auto; right: 0; left: 0; z-index: 1510; max-height: 85vh; overflow-y: auto">
+      <div class="sheet-handle"></div>
+      <div class="flex items-center justify-between mb-5 mt-2">
+        <button class="btn btn-plain" @click="ui.showVisionNew = false">إلغاء</button>
+        <p class="t-headline">✨ حلم جديد</p>
+        <button class="btn btn-plain" @click="addVisionItem()" style="font-weight: 700">حفظ</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <p class="t-caption2 mb-1">العنوان</p>
+          <input type="text" class="input" x-model="ui.newVision.title" placeholder="مثال: استوديو تصوير خاص بي">
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">الوصف (اختياري)</p>
+          <textarea class="input" x-model="ui.newVision.description" rows="2" placeholder="ليه ده مهم لك؟"></textarea>
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">تاريخ مستهدف</p>
+          <input type="date" class="input" x-model="ui.newVision.targetDate">
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">صورة (اختياري)</p>
+          <input type="file" accept="image/*" @change="uploadVisionImage($event)" style="font-size: 12px">
+          <div x-show="ui.newVision.imageUrl" style="margin-top: 8px">
+            <img :src="ui.newVision.imageUrl" style="max-width: 100%; max-height: 150px; border-radius: 10px">
+          </div>
+        </div>
+        <div>
+          <p class="t-caption2 mb-1">لون البطاقة (لو مفيش صورة)</p>
+          <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px">
+            <template x-for="c in ['#B08F3A','#FF9500','#7A5AF8','#34C759','#FF2D55','#00C7BE']" :key="c">
+              <button @click="ui.newVision.color = c" :style="`background: ${c}; height: 40px; border-radius: 8px; border: 2px solid ${ui.newVision.color === c ? 'white' : 'transparent'}; cursor: pointer`"></button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- v3.4 — AUDIO BRIEFING (Morning audio via ElevenLabs)    -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<template x-if="ui.showAudioBriefing">
+  <div style="position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #0a1a1a 0%, #0f2226 100%); color: #EEE7D9; overflow-y: auto; -webkit-overflow-scrolling: touch; animation: pageSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)">
+    <!-- Header -->
+    <div style="position: sticky; top: 0; z-index: 10; background: rgba(10,26,26,0.92); backdrop-filter: blur(20px); border-bottom: 0.5px solid rgba(0,199,190,0.25); padding: 12px 16px">
+      <div class="flex items-center justify-between" style="max-width: 700px; margin: 0 auto">
+        <button @click="ui.showAudioBriefing = false" style="display: flex; align-items: center; gap: 4px; background: transparent; border: none; color: #EEE7D9; cursor: pointer; padding: 6px 10px; font-size: 14px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          رجوع
+        </button>
+        <p class="t-headline" style="margin: 0; color: #EEE7D9">🎧 Audio Briefing</p>
+        <div style="width: 60px"></div>
+      </div>
+    </div>
+
+    <div style="max-width: 700px; margin: 0 auto; padding: 16px">
+      <!-- Hero player -->
+      <div style="background: linear-gradient(135deg, rgba(0,199,190,0.18), rgba(0,122,255,0.08)); border: 1px solid rgba(0,199,190,0.3); border-radius: 24px; padding: 30px 20px; text-align: center">
+        <div style="font-size: 70px; margin-bottom: 10px">🎙️</div>
+        <p style="font-size: 18px; font-weight: 800; margin-bottom: 4px">تقريرك الصوتي الصباحي</p>
+        <p style="font-size: 12px; opacity: 0.7">ملخص يومك في 2 دقيقة بصوت طبيعي</p>
+
+        <button @click="playAudioBriefing()" :disabled="ui.audioLoading"
+                style="margin-top: 24px; padding: 16px 40px; background: linear-gradient(135deg, #00C7BE, #007AFF); color: white; border: none; border-radius: 16px; font-weight: 800; cursor: pointer; font-size: 15px; min-width: 180px"
+                :style="ui.audioLoading ? 'opacity: 0.6' : ''">
+          <span x-show="!ui.audioLoading">▶ تشغيل التقرير</span>
+          <span x-show="ui.audioLoading">⏳ بيتم التحضير...</span>
+        </button>
+
+        <audio id="briefing-audio" controls style="margin-top: 20px; width: 100%; max-width: 400px" x-show="audioBriefing.audioUrl"></audio>
+
+        <p x-show="audioBriefing.lastPlayedDate" style="font-size: 11px; opacity: 0.5; margin-top: 16px">
+          آخر تقرير: <span x-text="audioBriefing.lastPlayedDate"></span>
+        </p>
+      </div>
+
+      <!-- Setup notes -->
+      <div style="background: rgba(238,231,217,0.04); border: 1px solid rgba(238,231,217,0.12); border-radius: 16px; padding: 16px; margin-top: 16px">
+        <p style="font-size: 12px; font-weight: 700; color: #00C7BE; margin-bottom: 10px">🛠️ إعداد لمرة واحدة</p>
+        <ol style="font-size: 12px; line-height: 1.8; opacity: 0.85; padding-right: 20px; margin: 0">
+          <li>سجل في <a href="https://elevenlabs.io" target="_blank" style="color: #00C7BE">ElevenLabs</a> واحصل على API key</li>
+          <li>اعمل workflow جديد في n8n.cloud</li>
+          <li>Webhook trigger → عنوان <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px">/audio-briefing</code></li>
+          <li>HTTP Request للـ Claude API (سونيت) لتوليد نص التقرير من الـ context</li>
+          <li>HTTP Request للـ ElevenLabs (voices/&lt;voice_id&gt;/text-to-speech)</li>
+          <li>Upload للـ Cloudinary وارجع URL في JSON: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px">{ audioUrl: "..." }</code></li>
+        </ol>
+        <p style="font-size: 11px; opacity: 0.6; margin-top: 10px">
+          الـ webhook URL: <span class="font-en" style="color: #00C7BE" x-text="audioBriefing.webhookUrl"></span>
+        </p>
+      </div>
+
+      <div style="text-align: center; padding: 30px 0; opacity: 0.4; font-size: 11px">
+        Audio · Hossam Life v3.4
+      </div>
+    </div>
+  </div>
+</template>
+
 <!-- v3.2 — New Project Sheet -->
 <template x-if="ui.showHossoNewProject">
   <div>
@@ -3884,6 +4145,26 @@ body::before {
         <button class="drawer-item" @click="ui.showDrawer = false; ui.showZakatSheet = true">
           <span class="drawer-item-icon" style="background: linear-gradient(135deg, var(--sf-purple), var(--sf-pink))">🕌</span>
           <span class="drawer-item-label">الزكاة والتقويم الهجري</span>
+          <svg class="drawer-item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1)"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Section: AI · مدرب الحياة (v3.4) -->
+      <div class="drawer-section">
+        <p class="drawer-section-title">🧠 AI · مساعدك الذكي</p>
+        <button class="drawer-item" @click="ui.showDrawer = false; ui.showCoach = true">
+          <span class="drawer-item-icon" style="background: linear-gradient(135deg, #7A5AF8, #5856D6)">🧠</span>
+          <span class="drawer-item-label">AI Life Coach</span>
+          <span class="t-caption2 font-en" style="color: var(--ink-3)" x-text="coach.messages.length + ' رسالة'"></span>
+        </button>
+        <button class="drawer-item" @click="ui.showDrawer = false; ui.showVisionBoard = true">
+          <span class="drawer-item-icon" style="background: linear-gradient(135deg, #FF9500, #FFCC00)">✨</span>
+          <span class="drawer-item-label">Vision Board · أحلامي</span>
+          <span class="t-caption2 font-en" style="color: var(--ink-3)" x-text="visionStats.active + '/' + visionStats.total"></span>
+        </button>
+        <button class="drawer-item" @click="ui.showDrawer = false; ui.showAudioBriefing = true">
+          <span class="drawer-item-icon" style="background: linear-gradient(135deg, #00C7BE, #007AFF)">🎧</span>
+          <span class="drawer-item-label">تقرير صوتي صباحي</span>
           <svg class="drawer-item-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1)"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
@@ -4806,6 +5087,15 @@ function app() {
       showMoodSheet: false,
       tempSleep: { hours: 7, quality: 'good' },
       tempMood: { emoji: '🙂', label: 'كويس', note: '' },
+      // v3.4 — AI Coach + Vision + Audio
+      showCoach: false,
+      coachDraft: '',
+      coachSending: false,
+      showVisionBoard: false,
+      showVisionNew: false,
+      newVision: { title: '', description: '', imageUrl: '', targetDate: '', color: '#B08F3A' },
+      showAudioBriefing: false,
+      audioLoading: false,
       showCreateCustom: false,
       editMode: false,
       sizePickerFor: null,
@@ -4901,6 +5191,25 @@ function app() {
       waterLastDay: '',
       sleepHistory: {},  // { 'YYYY-MM-DD': { hours, quality } }
       moodHistory: {},   // { 'YYYY-MM-DD': { emoji, label, note, ts } }
+    },
+
+    // v3.4 — AI Life Coach (chat with Claude with full context)
+    coach: {
+      messages: [],  // { role: 'user'|'assistant', text, ts }
+      webhookUrl: 'https://hosoo.app.n8n.cloud/webhook/life-coach',
+    },
+
+    // v3.4 — Vision Board (manifest your dreams)
+    visionBoard: {
+      items: [],  // { id, title, description, imageUrl, targetDate, status, color, createdAt }
+    },
+
+    // v3.4 — Audio Briefing
+    audioBriefing: {
+      enabled: false,
+      lastPlayedDate: '',
+      audioUrl: '',     // populated by n8n webhook
+      webhookUrl: 'https://hosoo.app.n8n.cloud/webhook/audio-briefing',
     },
 
     // v3.2 — HOSSO Visuals business module
@@ -7190,6 +7499,189 @@ function app() {
     },
 
     // ═════════════════════════════════════════════
+    // v3.4 — AI LIFE COACH (Claude with full context)
+    // ═════════════════════════════════════════════
+    coachContextSnapshot() {
+      // Build compact context summary for Claude
+      const today = new Date().toISOString().slice(0, 10);
+      const todayMood = this.health.moodHistory[today];
+      const todaySleep = this.health.sleepHistory[today];
+      return {
+        date: today,
+        profile: { name: this.profile.name || 'حسام' },
+        finance: {
+          balance: this.finance.balance,
+          monthSpendAED: (this.expenses || []).filter(e => (e.date || '').startsWith(today.slice(0,7))).reduce((s,e)=>s+(Number(e.amount)||0),0),
+        },
+        devotionsToday: this.devotions,
+        prayersToday: this.prayers.filter(p => p.done).map(p => p.name),
+        tasksOpen: this.tasks.filter(t => !t.done).length,
+        habits: this.habits.map(h => ({ name: h.name, value: h.value, target: h.target })),
+        health: {
+          water: `${this.health.waterToday}/${this.health.waterGoal}`,
+          sleepLastNight: todaySleep ? `${todaySleep.hours}h ${todaySleep.quality}` : null,
+          moodToday: todayMood ? `${todayMood.emoji} ${todayMood.label}` : null,
+          avg7DaySleep: this.avgSleep7Days,
+        },
+        hosso: {
+          activeProjects: this.hossoActiveProjects,
+          incomeThisMonthAED: this.hossoIncomeThisMonth,
+          pendingAED: this.hossoPendingTotal,
+        },
+        goals: (this.goals || []).filter(g => !g.done).slice(0, 5).map(g => g.title),
+        todayProgressPct: this.todayProgress,
+      };
+    },
+    async sendCoachMessage() {
+      const text = (this.ui.coachDraft || '').trim();
+      if (!text || this.ui.coachSending) return;
+      this.coach.messages.push({ role: 'user', text, ts: Date.now() });
+      this.ui.coachDraft = '';
+      this.ui.coachSending = true;
+      this.saveState();
+      this.$nextTick(() => this.scrollCoachToBottom());
+      try {
+        const res = await fetch(this.coach.webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: this.profile.email || 'hossam',
+            message: text,
+            context: this.coachContextSnapshot(),
+            history: this.coach.messages.slice(-12).map(m => ({ role: m.role, text: m.text })),
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        const reply = data.reply || data.text || data.message || 'لم أستلم ردًا.';
+        this.coach.messages.push({ role: 'assistant', text: reply, ts: Date.now() });
+      } catch (e) {
+        this.coach.messages.push({ role: 'assistant', text: '⚠️ خطأ في الاتصال بـ AI Coach. تأكد من إعداد n8n webhook.', ts: Date.now() });
+      } finally {
+        this.ui.coachSending = false;
+        this.saveState();
+        this.$nextTick(() => this.scrollCoachToBottom());
+      }
+    },
+    scrollCoachToBottom() {
+      const el = document.getElementById('coach-messages');
+      if (el) el.scrollTop = el.scrollHeight;
+    },
+    clearCoachChat() {
+      if (!confirm('مسح كل المحادثة؟')) return;
+      this.coach.messages = [];
+      this.saveState();
+    },
+
+    // ═════════════════════════════════════════════
+    // v3.4 — VISION BOARD (manifest your dreams)
+    // ═════════════════════════════════════════════
+    async uploadVisionImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      // Cloudinary upload (same as profile pic pattern)
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'hossam_life');
+      try {
+        const res = await fetch('https://api.cloudinary.com/v1_1/dgwxq04gw/image/upload', {
+          method: 'POST', body: formData,
+        });
+        const data = await res.json();
+        if (data.secure_url) {
+          this.ui.newVision.imageUrl = data.secure_url;
+          this.showToast('✅ تم رفع الصورة');
+        }
+      } catch (e) {
+        this.showToast('⚠️ فشل رفع الصورة');
+      }
+    },
+    addVisionItem() {
+      const v = this.ui.newVision;
+      if (!v.title.trim()) return this.showToast('⚠️ اكتب عنوان الحلم');
+      this.visionBoard.items.unshift({
+        id: 'v-' + Date.now(),
+        title: v.title.trim(),
+        description: v.description.trim(),
+        imageUrl: v.imageUrl,
+        targetDate: v.targetDate,
+        color: v.color || '#B08F3A',
+        status: 'active',  // active | achieved
+        createdAt: Date.now(),
+      });
+      this.ui.newVision = { title: '', description: '', imageUrl: '', targetDate: '', color: '#B08F3A' };
+      this.ui.showVisionNew = false;
+      this.saveState();
+      this.showToast('✨ تم إضافة الحلم');
+    },
+    toggleVisionAchieved(id) {
+      const v = this.visionBoard.items.find(x => x.id === id);
+      if (!v) return;
+      v.status = v.status === 'achieved' ? 'active' : 'achieved';
+      if (v.status === 'achieved') {
+        v.achievedAt = Date.now();
+        this.showToast('🎉 تحقق الحلم! مبروك');
+      }
+      this.saveState();
+    },
+    deleteVisionItem(id) {
+      if (!confirm('احذف هذا الحلم؟')) return;
+      this.visionBoard.items = this.visionBoard.items.filter(x => x.id !== id);
+      this.saveState();
+    },
+    visionDaysLeft(date) {
+      if (!date) return null;
+      const now = new Date();
+      const target = new Date(date);
+      const days = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+      return days;
+    },
+    get visionStats() {
+      const items = this.visionBoard.items || [];
+      const active = items.filter(v => v.status !== 'achieved').length;
+      const achieved = items.filter(v => v.status === 'achieved').length;
+      return { active, achieved, total: items.length };
+    },
+
+    // ═════════════════════════════════════════════
+    // v3.4 — AUDIO BRIEFING (morning audio via ElevenLabs)
+    // ═════════════════════════════════════════════
+    async playAudioBriefing() {
+      if (this.ui.audioLoading) return;
+      this.ui.audioLoading = true;
+      try {
+        const res = await fetch(this.audioBriefing.webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user: this.profile.email || 'hossam',
+            context: this.coachContextSnapshot(),
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        const audioUrl = data.audioUrl || data.url;
+        if (audioUrl) {
+          this.audioBriefing.audioUrl = audioUrl;
+          this.audioBriefing.lastPlayedDate = new Date().toISOString().slice(0, 10);
+          this.saveState();
+          this.$nextTick(() => {
+            const audio = document.getElementById('briefing-audio');
+            if (audio) {
+              audio.src = audioUrl;
+              audio.play().catch(() => this.showToast('اضغط Play يدوياً'));
+            }
+          });
+          this.showToast('🎧 جاري التحميل...');
+        } else {
+          this.showToast('⚠️ لم يتم إنشاء التقرير');
+        }
+      } catch (e) {
+        this.showToast('⚠️ خطأ — تأكد من n8n webhook');
+      } finally {
+        this.ui.audioLoading = false;
+      }
+    },
+
+    // ═════════════════════════════════════════════
     // v3.1 — UNIVERSAL SEARCH (search all data)
     // ═════════════════════════════════════════════
     get searchResults() {
@@ -7689,6 +8181,9 @@ function app() {
           zakatNisab: this.zakatNisab,
           hossoVisuals: this.hossoVisuals,
           health: this.health,
+          coach: { messages: this.coach.messages.slice(-50), webhookUrl: this.coach.webhookUrl },
+          visionBoard: this.visionBoard,
+          audioBriefing: this.audioBriefing,
         }));
         // v1.8 — Also push to cloud (debounced, skipped during remote apply)
         if (!this._applyingRemote && this._fbDoc) this.pushToFirestore();
@@ -7757,6 +8252,15 @@ function app() {
           if (s.health.sleepHistory) this.health.sleepHistory = s.health.sleepHistory;
           if (s.health.moodHistory) this.health.moodHistory = s.health.moodHistory;
         }
+        // v3.4 — AI Coach, Vision Board, Audio Briefing
+        if (s.coach) {
+          if (Array.isArray(s.coach.messages)) this.coach.messages = s.coach.messages;
+          if (s.coach.webhookUrl) this.coach.webhookUrl = s.coach.webhookUrl;
+        }
+        if (s.visionBoard && Array.isArray(s.visionBoard.items)) {
+          this.visionBoard.items = s.visionBoard.items;
+        }
+        if (s.audioBriefing) Object.assign(this.audioBriefing, s.audioBriefing);
       } catch (e) { console.warn('Load failed:', e); }
     },
   };
