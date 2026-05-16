@@ -1007,6 +1007,53 @@ body::before {
 /* Animated fade-up */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up { animation: fadeUp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+
+/* v2.7 — Floating Refresh button */
+.refresh-btn {
+  position: fixed;
+  top: 14px;
+  inset-inline-end: 96px; /* next to sync pill */
+  z-index: 50;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 0.5px solid rgba(60, 60, 67, 0.18);
+  color: var(--sf-blue);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, background 0.2s;
+}
+.refresh-btn:hover {
+  transform: scale(1.06);
+  background: rgba(255, 255, 255, 1);
+}
+.refresh-btn:active {
+  transform: scale(0.95);
+}
+.refresh-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+.refresh-btn.spinning svg {
+  animation: refreshSpin 0.8s linear infinite;
+}
+@keyframes refreshSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@media (max-width: 640px) {
+  .refresh-btn {
+    top: 10px;
+    inset-inline-end: 82px;
+    width: 32px; height: 32px;
+  }
+  .refresh-btn svg { width: 16px; height: 16px; }
+}
 </style>
 </head>
 
@@ -1024,6 +1071,19 @@ body::before {
   <span x-show="sync.status === 'offline'">بدون اتصال</span>
   <span x-show="sync.status === 'signed-out'">سجل دخول</span>
 </div>
+
+<!-- v2.7 — Floating Refresh button (top-right, next to sync pill) -->
+<button class="refresh-btn"
+        @click="refreshAll()"
+        :class="{ spinning: ui.refreshing }"
+        :disabled="ui.refreshing"
+        title="حدّث · Refresh">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 4 23 10 17 10"/>
+    <polyline points="1 20 1 14 7 14"/>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+  </svg>
+</button>
 
 <!-- ═══════════════════════════════════════════════════════ -->
 <!-- LOCK SCREEN (v1.7) — iOS-style PIN entry                -->
@@ -3184,7 +3244,7 @@ body::before {
 
         <div class="glass-strong p-4 rounded-2xl">
           <p class="t-caption2 mb-2">عن · ABOUT</p>
-          <p class="t-footnote">حسام ليف · إصدار 2.6.2 — Mobile compactness</p>
+          <p class="t-footnote">حسام ليف · إصدار 2.7 — Refresh button</p>
           <p class="t-caption1 font-en mt-1">Built with care for Hossam</p>
         </div>
       </div>
@@ -3556,6 +3616,9 @@ function app() {
       editingLovedOneId: null,
       newGoal: { type: 'finance', title: '', target: 0, deadline: '', icon: '🎯', color: '#34C759' },
       newLovedOne: { name: '', relationship: '', birthday: '', notes: '', photo: null, contactInterval: 7 },
+      // v2.7 — Refresh button state
+      refreshing: false,
+      lastRefresh: 0,
       showCreateCustom: false,
       editMode: false,
       sizePickerFor: null,
@@ -5675,6 +5738,68 @@ function app() {
 
     get filteredTotal() {
       return this.filteredExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    },
+
+    // ═════════════════════════════════════════════
+    // v2.7 — REFRESH ALL (manual sync trigger)
+    // ═════════════════════════════════════════════
+    async refreshAll() {
+      if (this.ui.refreshing) return;
+      // Throttle: at least 3 seconds between refreshes
+      if (Date.now() - (this.ui.lastRefresh || 0) < 3000) {
+        this.showToast('⏳ هدّي شوية');
+        return;
+      }
+      this.ui.refreshing = true;
+      this.ui.lastRefresh = Date.now();
+      try {
+        // 1) Check day rollover (in case midnight passed)
+        this.checkDayRollover();
+
+        // 2) Re-fetch prayer times for today
+        if (typeof this.fetchPrayerTimes === 'function') {
+          await this.fetchPrayerTimes();
+        }
+
+        // 3) Pull latest inbox from bot
+        if (typeof this.fetchInbox === 'function') {
+          await this.fetchInbox();
+        }
+
+        // 4) Push fresh snapshot to bot
+        if (typeof this.pushSnapshot === 'function') {
+          await this.pushSnapshot();
+        }
+
+        // 5) Check goal milestones
+        if (typeof this.checkGoalMilestones === 'function') {
+          this.checkGoalMilestones();
+        }
+
+        // 6) Run smart triggers
+        if (typeof this.runSmartTriggers === 'function') {
+          this.runSmartTriggers();
+        }
+
+        // 7) Re-pick daily quote if rolled to new day
+        if (typeof this.pickDailyQuote === 'function') {
+          this.pickDailyQuote();
+        }
+
+        // 8) Force a Firestore re-sync by pushing local state
+        if (this._fbDoc && typeof this.pushToFirestore === 'function') {
+          this.pushToFirestore(true);
+        }
+
+        if (navigator.vibrate) navigator.vibrate(30);
+        this.showToast('✅ تم التحديث');
+      } catch (e) {
+        console.error('[Refresh]', e);
+        this.showToast('⚠️ فيه حاجة فشلت — جرب تاني');
+      } finally {
+        // Minimum spin duration for visual feedback
+        setTimeout(() => { this.ui.refreshing = false; }, 600);
+      }
     },
 
     // ═════════════════════════════════════════════
