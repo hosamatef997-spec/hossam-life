@@ -339,6 +339,8 @@ body::before {
   max-width: 1600px;
   margin: 0 auto;
   padding: 24px 16px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 24px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
 }
 @media (min-width: 768px) {
   .app-container { padding: 32px 28px; }
@@ -817,10 +819,45 @@ body::before {
   .layout-3col { gap: 10px !important; margin-top: 12px !important; }
   .sidebar-col { gap: 10px !important; }
   .grid-widgets { gap: 10px !important; }
-  .app-container { padding: 10px 10px !important; }
+  .app-container {
+    padding: 10px 10px !important;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 60px) !important;
+  }
 
-  /* Reduce inline animation delays that make first 2 appear "smaller" while later widgets render larger */
+  /* Reduce inline animation delays */
   .widget-wrap .glass { animation-delay: 0ms !important; }
+
+  /* v2.7.2 — AGGRESSIVE size cuts for all widgets on mobile */
+  .glass .row-icon { width: 28px !important; height: 28px !important; font-size: 14px !important; }
+  .glass .t-title3 { font-size: 14px !important; }
+  .glass .t-headline { font-size: 13px !important; }
+  .glass .t-callout { font-size: 13px !important; }
+  .glass .t-caption2 { font-size: 10px !important; }
+  .glass .grid.grid-cols-4 > div, .glass .grid.grid-cols-3 > div { padding: 6px 4px !important; }
+  .glass .grid.grid-cols-4 [style*="font-size: 18px"], .glass .grid.grid-cols-3 [style*="font-size: 18px"] { font-size: 15px !important; }
+  .glass [style*="grid-cols-7"] > *, .glass .grid-cols-7 > * { min-height: auto !important; padding: 6px 2px !important; }
+  .glass .grid.grid-cols-7 [style*="font-size"] { font-size: 14px !important; }
+  .glass .btn { padding: 6px 10px !important; font-size: 12px !important; }
+  .glass .btn-tinted { padding: 5px 9px !important; font-size: 11px !important; }
+  .input { font-size: 14px !important; padding: 8px 10px !important; }
+  [data-widget-key="moodBoard"] .grid { gap: 4px !important; }
+  .mb-3 { margin-bottom: 8px !important; }
+  .mb-4 { margin-bottom: 10px !important; }
+  .mt-3 { margin-top: 8px !important; }
+  .mt-4 { margin-top: 10px !important; }
+  .p-3 { padding: 8px !important; }
+  .p-4 { padding: 10px !important; }
+  .space-y-2 > * + * { margin-top: 6px !important; }
+  .space-y-3 > * + * { margin-top: 8px !important; }
+  .progress { height: 6px !important; }
+  .sync-pill {
+    top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
+    left: 12px !important;
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+  }
+  footer, .footer, p.text-center.mt-8 { font-size: 10px !important; margin-top: 14px !important; }
 
   /* Hero card: more compact spacing */
   .hero-clock-big { font-size: 28px !important; letter-spacing: -0.5px !important; }
@@ -2668,8 +2705,8 @@ body::before {
   <!-- ═══════════════════ END LAYOUT ═══════════════════ -->
 
   <!-- Footer -->
-  <p class="text-center mt-8 t-caption2" style="color: var(--ink-4)">
-    حسام ليف · Hossam Life · v1.1
+  <p class="text-center mt-8 t-caption2" style="color: var(--ink-4); padding-bottom: env(safe-area-inset-bottom, 0px)">
+    حسام ليف · Hossam Life · v2.7.2
   </p>
 
 </div>
@@ -3253,7 +3290,7 @@ body::before {
 
         <div class="glass-strong p-4 rounded-2xl">
           <p class="t-caption2 mb-2">عن · ABOUT</p>
-          <p class="t-footnote">حسام ليف · إصدار 2.7.1 — Layout fixes</p>
+          <p class="t-footnote">حسام ليف · إصدار 2.7.2 — Mobile Mega Compact</p>
           <p class="t-caption1 font-en mt-1">Built with care for Hossam</p>
         </div>
       </div>
