@@ -1,203 +1,81 @@
 # 🚀 حسام ليف · Phase 3 Roadmap
 
-> **Status:** جاهز للتنفيذ بعد إقرار Phase 2
+> **Status:** ✅ معظم Phase 3 اتسلم في v2.6
 
 ---
 
-## ✅ المُسلَّم (Phase 1, 2A, 2B)
+## ✅ المُسلَّم (Phase 1, 2, 3)
 
-| Phase | Feature | Status |
-|-------|---------|--------|
-| 1 | Dashboard core widgets | ✅ |
-| 1 | Firestore sync + Google auth | ✅ |
-| 1 | Cloudinary photo storage | ✅ |
-| 2 | Telegram notifications (1-way) | ✅ |
-| 2A | Smart Inbox (text + voice) | ✅ |
-| 2A | Bot commands `/balance` `/today` etc | ✅ |
-| 2A | Snapshot push → n8n | ✅ |
-| 2A | 4 new smart triggers | ✅ |
-| 2A | Unified Finance page | ✅ |
-| 2B | Weekly AI report (Sat 7AM) | ✅ |
+### Phase 1 — Foundation
+- Dashboard core widgets, Firestore sync, Google auth, Cloudinary, PWA
 
----
+### Phase 2 — Bot & AI
+- Smart Inbox (text + voice), 6 bot commands, snapshot sync
+- 4 new smart triggers, Unified Finance page
+- Weekly AI Report (Saturday 7AM)
 
-## 🎯 Phase 3 — الخطة المقترحة
+### Phase 3 — Mega Update (v2.5 + v2.6)
+- ✅ **3.1 Live Sync** — Firestore onSnapshot (موجود من v1.8)
+- ✅ **3.2 Habit Heatmap** — 52-week GitHub-style grid
+- ✅ **3.3 Goals & Milestones** — أهداف بأنواع مختلفة + milestone alerts على التيلجرام
+- ✅ **3.4 Net Worth Tracker** — كاش/ذهب/أسهم/عقار/ديون
+- ✅ **3.5 Islamic Features** — هجري + رمضان + حاسبة زكاة
+- ✅ **3.6 Loved Ones Module** — جهات تواصل + birthday reminders
+- ✅ **3.9 Voice Memos Library** — أرشيف الرسائل الصوتية
 
-### 3A · HOSSO Studio Integration (الأولوية الأعلى)
+### Phase 3 — متبقي (يحتاج setup خارجي)
 
-**الهدف:** تخلي HOSSO Studio (تطبيق المحتوى) متربط بـ Hossam Life (الداش بورد الشخصي).
-
-**التنفيذ:**
-- مشاركة Firestore project بين التطبيقين (نفس `hossam-life`)
-- إضافة collection جديدة: `studio_posts`
-- لما تنشر بوست من HOSSO Studio → يتسجّل أوتوماتيك في **Post Calendar widget**
-- إحصائيات المحتوى (likes, reach, engagement) تظهر في widget جديد "Studio Analytics"
-- البوت يقدر يعرف "/studio" → ملخص آخر بوست
-
-**الجهد:** متوسط · يحتاج فحص HOSSO Studio code
+| # | الفيتشر | السبب اللي مأجلها | الجهد المطلوب |
+|---|--------|------------------|---------------|
+| 3.7 | **AI Conversational Memory** | يحتاج Pinecone account (vector DB) | عالي — 4-5 أيام |
+| 3.8 | **HOSSO Studio Link** | يحتاج فحص HOSSO Studio code | متوسط |
+| 3.10 | **iCloud Calendar 2-way Sync** | Apple OAuth معقد جداً | عالي — 5+ أيام |
 
 ---
 
-### 3B · AI Conversational Memory
+## 🎯 Phase 4 — أفكار للمستقبل
 
-**الهدف:** البوت يفتكر محادثاتك السابقة ويتعلم تفضيلاتك.
+### 4A · Photography Pro
+- EXIF data من الصور
+- Auto-categorize: portrait/landscape/macro
+- Lens analytics: أنهي عدسة بتستخدمها أكتر
+- Lightroom presets integration
 
-**التنفيذ:**
-- Vector DB (Pinecone أو local Supabase pgvector)
-- كل محادثة بتتخزن كـ embedding
-- لما تسأل سؤال، Claude يجيب الـ context من تاريخك
-- مثال: "بعت كام لكورنيش الشهر اللي فات؟" → بحث semantic في تاريخك
+### 4B · Family Sharing
+- يوزر إضافي للزوجة (لما تيجي)
+- Shared shopping list
+- Joint financial goals
+- Family calendar
 
-**الجهد:** عالي · يحتاج credentials لـ Pinecone أو DB
+### 4C · Habits Advanced
+- Anchor habits (linked to existing routines)
+- Habit chains: A→B→C
+- Substitution tracking (بدل سيجارة، اشرب مية)
+- AI suggests new habits based on patterns
 
----
+### 4D · Travel Mode
+- Trip planning sheet
+- Multi-currency conversion live
+- Expense categorization by trip
+- Pre-trip checklist auto-generated
 
-### 3C · Habit Heatmap & Trends
-
-**الهدف:** فيج زي GitHub contributions يبيّن استمراريتك.
-
-**التنفيذ:**
-- Widget جديد بـ 365 خانة (سنة كاملة)
-- كل يوم: لون حسب عدد العادات اللي تمّت
-- Trend line: average over 7/30/90 days
-- "أطول استمرارية" badge
-
-**الجهد:** منخفض · UI خفيف · بيانات موجودة في `dailyHistory`
-
----
-
-### 3D · Goals & Milestones System
-
-**الهدف:** أهداف طويلة المدى بتتراكب مع الـ habits والـ finance.
-
-**التنفيذ:**
-- Goal types:
-  - 💰 **Finance:** "وفّر 50,000 د.إ لرحلة" → progress bar من الـ balance
-  - 🔥 **Streak:** "100 يوم صباحيات متواصلة" → progress bar من devotionStreak
-  - 📸 **Photography:** "365 صورة في السنة" → progress من photoDay
-  - 📚 **Habit:** "اقرأ 30 دقيقة يومياً لمدة 90 يوم"
-- AI suggests goals based on past data
-- Milestone celebrations 🎉 (animations + Telegram message)
-
-**الجهد:** متوسط · UI + logic
+### 4E · Health Integration
+- Apple Health import (steps, sleep, weight)
+- Mood tracking
+- Stress meter
+- Daily intent setting
 
 ---
 
-### 3E · Family/Loved Ones Module
+## 📊 الإحصائيات الحالية
 
-**الهدف:** سجّل لحظات مع العيلة بدل ما يضيع.
-
-**التنفيذ:**
-- Widget جديد "Loved Ones" (موجود فعلاً اسمه بس فاضي)
-- Profile لكل شخص (عاطف، الجدة حسنية):
-  - آخر مكالمة
-  - مناسبات قادمة (عيد ميلاد، ذكرى)
-  - صور مشتركة
-  - ملاحظات
-- Reminders ذكية: "بقالك 7 أيام مكلمتش ماما" 
-- البوت يفتكر: "اليوم عيد ميلاد عاطف"
-
-**الجهد:** متوسط · حساس عاطفياً
+- **Widgets:** 25+ متاحة (toggleable + size-able + reorderable)
+- **AI:** Claude Sonnet 4.6 (weekly), Claude Haiku 4.5 (parsing), Gemini 2.5 (voice)
+- **n8n Workflows:** 3 active (Notifications, Smart Inbox, Weekly Report)
+- **Storage:** Firestore + Cloudinary + LocalStorage
+- **Languages:** Arabic (primary) + English fallback
+- **Lines of code:** ~4500+ in single index.html
 
 ---
 
-### 3F · Investment & Net Worth Tracking
-
-**الهدف:** تتبع كل أصولك (مش بس الـ AED balance).
-
-**التنفيذ:**
-- أصول multi-currency:
-  - 🇦🇪 AED cash
-  - 🇪🇬 جنيه مصري (الشقتان)
-  - 💰 ذهب (gram price + count)
-  - 📈 أسهم (API for live prices)
-  - 🏠 عقار (manual valuation)
-- Net worth chart over time
-- البوت يقول `/networth` → الإجمالي بكل العملات
-
-**الجهد:** عالي · يحتاج financial data APIs
-
----
-
-### 3G · Hijri Calendar + Islamic Features
-
-**الهدف:** التطبيق محترم الهوية الإسلامية.
-
-**التنفيذ:**
-- التاريخ الهجري في الـ header
-- رمضان countdown
-- زكاة calculator على الـ balance (2.5%)
-- آذكار الصباح والمساء (audio playback)
-- أيام مستحبة للصيام (الإثنين/الخميس + الأيام البيض)
-
-**الجهد:** منخفض-متوسط
-
----
-
-### 3H · iCloud Calendar 2-way Sync
-
-**الهدف:** المهام من الداش بورد تظهر في iPhone Calendar.
-
-**التنفيذ:**
-- CalDAV API integration
-- المهام عندها deadline → تتسجّل كـ events
-- مواعيد الصلوات تتسجّل كـ events
-- 2-way: events جديدة من iCloud تظهر في daily view
-
-**الجهد:** عالي · iCloud auth معقد
-
----
-
-### 3I · Voice Memos Library
-
-**الهدف:** كل الـ voice notes اللي بعتها للبوت يبقى عندك archive.
-
-**التنفيذ:**
-- Widget "Voice Memos"
-- كل ريكورد بيتخزن في Cloudinary
-- Transcription + audio playback
-- Tag بتلقائي حسب type
-- البوت `/memo last` → آخر memo
-
-**الجهد:** متوسط
-
----
-
-### 3J · Multi-device Live Sync (Realtime)
-
-**الهدف:** تعديل في الفون يظهر في اللاب توب فوراً (مش كل refresh).
-
-**التنفيذ:**
-- استبدال polling بـ Firestore `onSnapshot` listener
-- WebSocket-based sync
-- Visual indicator: "Live syncing across 2 devices"
-
-**الجهد:** منخفض · تحسين على الـ Firestore الموجود
-
----
-
-## 🎯 الترتيب المقترح للتنفيذ
-
-| # | Phase | اللي بياخد | الـ Impact | الأولوية |
-|---|-------|---------|--------|---------|
-| 1 | **3J** Live sync | يوم | عالي | 🔥 ابدأ هنا |
-| 2 | **3C** Heatmap | يوم | متوسط | ⭐ |
-| 3 | **3D** Goals | 2-3 أيام | عالي | ⭐⭐ |
-| 4 | **3A** HOSSO link | 2-3 أيام | عالي | ⭐⭐ |
-| 5 | **3G** Islamic | يوم | متوسط | ⭐ |
-| 6 | **3E** Loved ones | 2 أيام | عاطفي | ⭐⭐ |
-| 7 | **3B** AI memory | 4-5 أيام | عالي جداً | 🏆 |
-| 8 | **3F** Investments | 5 أيام | عالي | 🏆 |
-| 9 | **3I** Voice memos | 2 أيام | متوسط | ⭐ |
-| 10 | **3H** iCloud sync | 5+ أيام | عالي | 🏆 |
-
----
-
-## 📝 ملاحظات
-
-- كل phase ممكن تبدأ منفصلة
-- بعضها بتعتمد على بعض (3F يحتاج 3D goals)
-- البوت ممكن يتحدّث في أي phase بأوامر جديدة
-- الـ Snapshot mechanism موجود وجاهز يستقبل بيانات إضافية
-
-**Built with care for Hossam · v2.3**
+**Built with care for Hossam · v2.6**
